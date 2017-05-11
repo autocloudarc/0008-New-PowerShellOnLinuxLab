@@ -5,8 +5,8 @@
 PROGRAM		: New-PowerShellOnLinuxLab.ps1
 
 DESCRIPTION	:
-This script creates the following 4 VMs: 
-1) 1 x Windows Server 2016
+This script creates the following 6 VMs: 
+1) 3 x Windows Server 2016
 2) 1 x UbuntuServer LTS 16.04
 3) 1 x CentOS 7.3
 4) 1 x openSUSE-Leap 42.2
@@ -226,8 +226,8 @@ TASK ITEMS
 #>
 
 # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
-Clear-AzureProfile -Force
-Login-AzureRmAccount
+# Clear-AzureProfile -Force
+# Login-AzureRmAccount
 
 # Construct custom path for log files 
 $LogDir = "New-AzureRmAvSet"
@@ -502,7 +502,9 @@ Write-ToConsoleAndLog -Output "Since only 1 instance of a Windows and 1 instance
  LSSUBNET = $ObjDomain.pSubNetLS.ToUpper()
  NSGLS = $nsgLsSubnetName.ToUpper()
  NSGWS = $nsgWsSubnetName.ToUpper()
- WS16 = $ObjDomain.pWs2016.ToUpper()
+ WS01 = $ObjDomain.pWs2016.ToUpper() + 1
+ WS02 = $ObjDomain.pWs2016.ToUpper() + 2
+ WS03 = $ObjDomain.pWs2016.ToUpper() + 3
  LSUB = $ObjDomain.pLsUbuntu.ToUpper()
  LSCO = $ObjDomain.pLsCentOS.ToUpper()
  LSOS = $ObjDomain.pLsOpenSUSE.ToUpper()
