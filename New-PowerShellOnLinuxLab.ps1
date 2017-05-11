@@ -225,16 +225,6 @@ REFERENCES:
 TASK ITEMS
 #>
 
-<# 
-***************************************************************************************************************************************************************************
-REVISION/CHANGE RECORD	
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DATE        VERSION    NAME               CHANGE
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-16 APR 2017 1.0.0.0 Preston K. Parsard Initial release.
-04 MAY 2017 1.0.0.1 Preston K. parsard Added references and openSUSE and CentOS distros.
-#>
-
 # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
 Clear-AzureProfile -Force
 Login-AzureRmAccount
@@ -399,8 +389,9 @@ $linuxAdminName = "linuxuser"
 # Virtual Machine size
 $wsVmSize = "Standard_D1_v2"
 $lsVmSize = $wsVmSize
-# Availability set
+# Availability sets
 $AvSetLsName = "AvSetLinux"
+$AvSetWsName = "AvSetWindows"
 $SiteNamePrefix = "net"
 $gtld = ".lab"
 
@@ -451,12 +442,14 @@ $ObjDomain = [PSCustomObject]@{
  # Subnet names matches the VM platforms (WS = Windows Server, LS = Linux Servers)
  pSubNetWS = "WS"
  pSubNetLS = "LS"
- pWs2016 = $SiteCode + "WS01" # Based on the latest image of Windows Server 2016
+ pWs2016 = $SiteCode + "WS0" # Based on the latest image of Windows Server 2016
  pLsUbuntu = $SiteCode + "LS01" # Based on the latest image of Linux UbuntuServer 17.04-LTS
  pLsCentOs = $SiteCode + "LS02" # Based on the latest image of Linux CentOS 7.3
  pLsOpenSUSE = $SiteCode + "LS03" # Based on the latest image of Linux OpenSUSE-Leap 42.2
 } #end $ObjDomain
 
+# 3 Windows VMs will be created
+$WindowsInstanceCount = 3
 $LinuxSystems = @($ObjDomain.pLsUbuntu,$ObjDomain.pLsCentOs,$ObjDomain.pLsOpenSUSE)
 
 # Subnet for domain controllers
@@ -552,6 +545,8 @@ Function Add-WindowsVm2016
 {
  # Create the public ip (PIP) and NIC names
  Write-WithTime -Output "Creating public IP name..." -Log $Log
+ # Append index to VM name
+ $ObjDomain.pWs2016 = $ObjDomain.pWs2016 + $w 
  $wsPipName = "$($ObjDomain.pWs2016)" + "-pip"
  $wsPipName = $wsPipName.ToLower()
  Write-WithTime -Output "Creating NIC name..." -Log $Log
@@ -564,7 +559,7 @@ Function Add-WindowsVm2016
  $wsDriveNameData = "$($ObjDomain.pWs2016)-DATA"
 
  # $x represents the value of the last octect of the private IP address. We skip the first 3 addresses in the network address because they are always reserved in Azure
- $x = 4
+ $x = 3 + $w
 
  # NOTE: Domain labels have to be lower case
  Write-WithTime -Output "Creating DNS domain label..." -Log $Log
@@ -598,7 +593,7 @@ Function Add-WindowsVm2016
   New-AzureRmVM -ResourceGroupName $rg -Location $Region -VM $wsVmConfig -Verbose
 
   # Get current VM configuration
- $vmWs = Get-AzureRmVM -ResourceGroupName $rg -Name $ObjDomain.pWs2016
+  $vmWs = Get-AzureRmVM -ResourceGroupName $rg -Name $ObjDomain.pWs2016
 
   # Set NIC
   Write-WithTime -Output "Adding NIC..." -Log $Log
@@ -757,8 +752,10 @@ else
  # Proceed with deployment
  Write-ToConsoleAndLog -Output "Deploying environment..." -Log $Log
  Write-WithTime -Output "Building $($ObjDomain.pWs2016)..." -Log $Log
- # Linemark
- Add-WindowsVm2016
+ For ($w = 1; $w++; $w -le $WindowsInstanceCount)
+ {
+    Add-WindowsVm2016
+ } #end ForEach
  # Initialize index for each linux system
  $i = 0
  # Build each linux system in collection
