@@ -224,6 +224,7 @@ REFERENCES:
 <# 
 TASK ITEMS
 0001. Remove public IP on all except the fist Windows VM
+0002. Replace $AttendeeNum variable with $StartTime
 #>
 
 # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
