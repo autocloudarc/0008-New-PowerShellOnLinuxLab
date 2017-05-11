@@ -226,8 +226,8 @@ TASK ITEMS
 #>
 
 # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
-Clear-AzureProfile -Force
-Login-AzureRmAccount
+# Clear-AzureProfile -Force
+# Login-AzureRmAccount
 
 # Construct custom path for log files 
 $LogDir = "New-AzureRmAvSet"
