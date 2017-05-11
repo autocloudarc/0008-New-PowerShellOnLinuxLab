@@ -223,6 +223,7 @@ REFERENCES:
 
 <# 
 TASK ITEMS
+0001. Remove public IP on all except the fist Windows VM
 #>
 
 # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
@@ -442,7 +443,7 @@ $ObjDomain = [PSCustomObject]@{
  # Subnet names matches the VM platforms (WS = Windows Server, LS = Linux Servers)
  pSubNetWS = "WS"
  pSubNetLS = "LS"
- pWs2016 = $SiteCode + "WS0" # Based on the latest image of Windows Server 2016
+ pWs2016prefix = $SiteCode + "WS0" # Based on the latest image of Windows Server 2016
  pLsUbuntu = $SiteCode + "LS01" # Based on the latest image of Linux UbuntuServer 17.04-LTS
  pLsCentOs = $SiteCode + "LS02" # Based on the latest image of Linux CentOS 7.3
  pLsOpenSUSE = $SiteCode + "LS03" # Based on the latest image of Linux OpenSUSE-Leap 42.2
@@ -548,17 +549,16 @@ Function Add-WindowsVm2016
  # Create the public ip (PIP) and NIC names
  Write-WithTime -Output "Creating public IP name..." -Log $Log
  # Append index to VM name
- $ObjDomain.pWs2016 = $ObjDomain.pWs2016 + $w 
- $wsPipName = "$($ObjDomain.pWs2016)" + "-pip"
+ $wsPipName = $Ws2016 + "-pip"
  $wsPipName = $wsPipName.ToLower()
  Write-WithTime -Output "Creating NIC name..." -Log $Log
- $wsNicName = "$($ObjDomain.pWs2016)" + "-nic" 
+ $wsNicName = $Ws2016 + "-nic" 
  $wsNicName = $wsNicName.ToLower()
 
  # Construct the drive names for the SYSTEM and DATA drives
  Write-WithTime -Output "Constructing SYSTEM drive name page blob..." -Log $Log
- $wsDriveNameSystem = "$($ObjDomain.pWs2016)-SYST"
- $wsDriveNameData = "$($ObjDomain.pWs2016)-DATA"
+ $wsDriveNameSystem = "$Ws2016-SYST"
+ $wsDriveNameData = "$Ws2016-DATA"
 
  # $x represents the value of the last octect of the private IP address. We skip the first 3 addresses in the network address because they are always reserved in Azure
  $x = 3 + $w
@@ -578,14 +578,14 @@ Function Add-WindowsVm2016
  $wsNic = New-AzureRmNetworkInterface -ResourceGroupName $rg -Name $wsNicName -Location $Region -PrivateIpAddress "10.10.10.$x" -SubnetId $Vnet.Subnets[0].Id -PublicIpAddressId $wsPip.Id -Verbose
  
  # If the VM doesn't aready exist, configure and create it
- If (!((Get-AzureRmVM -ResourceGroupName $rg).Name -match $ObjDomain.pWs2016))
+ If (!((Get-AzureRmVM -ResourceGroupName $rg).Name -match $Ws2016))
  {
-  Write-WithTime -Output "VM $($ObjDomain.pWs2016) doesn't already exist. Configuring..." -Log $Log
+		Write-WithTime -Output "VM $Ws2016 doesn't already exist. Configuring..." -Log $Log
   # Setup new vm configuration
-   $wsVmConfig = New-AzureRmVMConfig –VMName $ObjDomain.pWs2016 -VMSize $wsVmSize | 
-   Set-AzureRmVMOperatingSystem -Windows -ComputerName $ObjDomain.pWs2016 -Credential $windowsCred -ProvisionVMAgent -EnableAutoUpdate | 
-   Set-AzureRmVMSourceImage -PublisherName $imageObj.publisherWindows -Offer $imageObj.offerWindows -Skus $imageObj.skuWindows -Version $imageObj.versionWindows | 
-   Set-AzureRmVMOSDisk -Name $wsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
+   $wsVmConfig = New-AzureRmVMConfig –VMName $Ws2016 -VMSize $wsVmSize |
+	Set-AzureRmVMOperatingSystem -Windows -ComputerName $Ws2016 -Credential $windowsCred -ProvisionVMAgent -EnableAutoUpdate | 
+   	Set-AzureRmVMSourceImage -PublisherName $imageObj.publisherWindows -Offer $imageObj.offerWindows -Skus $imageObj.skuWindows -Version $imageObj.versionWindows | 
+   	Set-AzureRmVMOSDisk -Name $wsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
 
   # Add NIC
   Add-AzureRmVMNetworkInterface -VM $wsVmConfig -Id $wsNic.Id -Verbose
@@ -595,7 +595,7 @@ Function Add-WindowsVm2016
   New-AzureRmVM -ResourceGroupName $rg -Location $Region -VM $wsVmConfig -Verbose
 
   # Get current VM configuration
-  $vmWs = Get-AzureRmVM -ResourceGroupName $rg -Name $ObjDomain.pWs2016
+  $vmWs = Get-AzureRmVM -ResourceGroupName $rg -Name $Ws2016
 
   # Set NIC
   Write-WithTime -Output "Adding NIC..." -Log $Log
@@ -611,7 +611,7 @@ Function Add-WindowsVm2016
  } #end If
  else
  {
-  Write-ToConsoleAndLog -Output "$($ObjDomain.pWs2016) already exists..." -Log $Log
+		Write-ToConsoleAndLog -Output "$Ws2016 already exists..." -Log $Log
  } #end else
 } #End function
 
@@ -753,11 +753,12 @@ else
 {
  # Proceed with deployment
  Write-ToConsoleAndLog -Output "Deploying environment..." -Log $Log
- Write-WithTime -Output "Building $($ObjDomain.pWs2016)..." -Log $Log
  For ($w = 1; $w -le $WindowsInstanceCount; $w++)
- {
-    Add-WindowsVm2016
- } #end ForEach
+	{
+		$Ws2016 = $ObjDomain.pWs2016prefix + $w 
+		Write-WithTime -Output "Building $Ws2016" -Log $Log
+    	Add-WindowsVm2016
+ 	} #end ForEach
  # Initialize index for each linux system
  $i = 0
  # Build each linux system in collection
