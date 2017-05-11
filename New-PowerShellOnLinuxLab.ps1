@@ -240,7 +240,6 @@ If (!(Test-Path $LogPath))
 
 # Create log file with a "u" formatted time-date stamp
 $StartTime = (((get-date -format u).Substring(0,16)).Replace(" ", "-")).Replace(":","")
-$24hrTime = $StartTime.Substring(11,4)
 
 $LogFile = "New-AzureRmAvSet-LOG" + "-" + $StartTime + ".log"
 $TranscriptFile = "New-AzureRmAvSet-TRANSCRIPT" + "-" + $StartTime + ".log"
@@ -299,31 +298,6 @@ $RegionCode = @{
 	WEUS2 = "westus2"
 } #end HashTable
 
-$envCode = @{
-	TST = "Test"
-	DEV = "Development"
-	PRD = "Production"
-	PRP = "Pre-Production"
-} #end Hash Table
-
-$tierCode = @{
-	DMZ = "De-Militarized Zone"
-	IAM = "Identity and Access Management"
-	PRE = "Presentation"
-	APP = "Application"
-	DTA = "Data"
-} #end Hash Table 
-
-$functionCode = @{
-	ADDS = "Domain Controller"
-	SQLS = "SQL Server"
-	POSH = "PowerShell Server"
-	WEBS = "Web Server"
-	SHRP = "SharePoint Server"
-	WNDS = "Generic Windows Server"
-	LNUX = "Generic Linux Server"
-} #end Hash Table
-
 $winFunctionCode = "WNDS"
 $lnxFuncitonCode = "LNUX"
 
@@ -344,7 +318,7 @@ Select-AzureRmSubscription -SubscriptionId (Get-AzureRmSubscription -Subscriptio
 Do
 {
  # Resource Group name
- [string] $rg = Read-Host "Please enter a new resource group name [rg##] "
+ [string]$rg = Read-Host "Please enter a new resource group name [rg##] "
 } #end Do
 Until (($rg) -match '^rg\d{2}$')
 
@@ -402,7 +376,6 @@ New-AzureRmResourceGroup -Name $rg -Location $Region -Verbose
 
 $azRegionCode = $RegionCode.Keys | Where-Object { $RegionCode[$_] -eq "$Region" }
 
-# linemark
 $WinVmNamePrefix = $cspCode + $azRegionCode + $winFunctionCode + $seriesPrefix
 $LnxVmNamePrefix = $cspCode + $azRegionCode + $lnxFuncitonCode + $seriesPrefix
 
@@ -551,7 +524,6 @@ Write-ToConsoleAndLog -Output "Since only 1 instance of a Windows and 1 instance
  $SummObj = [PSCustomObject]@{
  SUBSCRIPTION = $Subscription.ToUpper()
  RESOURCEGROUP = $rg
- SITECODE = $SiteCode.ToUpper()
  ATTENDEENUM = $AttendeeNum.ToUpper()
  DOMAINFQDN = $ObjDomain.pFQDN.ToUpper()
  DOMAINNETBIOS = $ObjDomain.pDomainName.ToUpper()
