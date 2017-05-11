@@ -224,7 +224,8 @@ REFERENCES:
 <# 
 TASK ITEMS
 0001. Remove public IP on all except the fist Windows VM
-0002. Replace $time24hr variable with $StartTime
+0002.cReplace $time24hr variable with $StartTime
+0003. Assign availability sets to both Windows and Linux machines: 
 #>
 
 # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
@@ -417,6 +418,8 @@ $lsVmSize = $wsVmSize
 # Availability sets
 $AvSetLsName = "AvSetLinux"
 $AvSetWsName = "AvSetWindows"
+$winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 3 $Region -Managed -Verbose
+$lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 3 $Region -Managed -Verbose
 $SiteNamePrefix = "net"
 $gtld = ".lab"
 
@@ -605,7 +608,7 @@ Function Add-WindowsVm2016
  {
 		Write-WithTime -Output "VM $Ws2016 doesn't already exist. Configuring..." -Log $Log
   # Setup new vm configuration
-   $wsVmConfig = New-AzureRmVMConfig –VMName $Ws2016 -VMSize $wsVmSize |
+   $wsVmConfig = New-AzureRmVMConfig –VMName $Ws2016 -VMSize $wsVmSize -AvailabilitySetId $winAvSet.Id |
 	Set-AzureRmVMOperatingSystem -Windows -ComputerName $Ws2016 -Credential $windowsCred -ProvisionVMAgent -EnableAutoUpdate | 
    	Set-AzureRmVMSourceImage -PublisherName $imageObj.publisherWindows -Offer $imageObj.offerWindows -Skus $imageObj.skuWindows -Version $imageObj.versionWindows | 
    	Set-AzureRmVMOSDisk -Name $wsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
@@ -702,7 +705,7 @@ Function Add-LinuxVm
   Write-WithTime -Output "VM $LinuxSystem doesn't already exist. Configuring..." -Log $Log
   
   # Setup new vm configuration
-   $lsVmConfig = New-AzureRmVMConfig –VMName $LinuxSystem -VMSize $lsVmSize | 
+   $lsVmConfig = New-AzureRmVMConfig –VMName $LinuxSystem -VMSize $lsVmSize -AvailabilitySetId $lnxAvSet.Id | 
    Set-AzureRmVMOperatingSystem -Linux -ComputerName $LinuxSystem -Credential $linuxCred -DisablePasswordAuthentication | 
    Set-AzureRmVMSourceImage -PublisherName $publisher -Offer $offer -Skus $sku -Version $version | 
    Set-AzureRmVMOSDisk -Name $lsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
