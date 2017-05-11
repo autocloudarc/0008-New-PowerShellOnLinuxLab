@@ -224,7 +224,7 @@ REFERENCES:
 <# 
 TASK ITEMS
 0001. Remove public IP on all except the fist Windows VM
-0002. Replace $AttendeeNum variable with $StartTime
+0002. Replace $time24hr variable with $StartTime
 #>
 
 # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
@@ -241,6 +241,7 @@ If (!(Test-Path $LogPath))
 
 # Create log file with a "u" formatted time-date stamp
 $StartTime = (((get-date -format u).Substring(0,16)).Replace(" ", "-")).Replace(":","")
+$time24hr = $StartTime.Substring(11,4)
 
 $LogFile = "New-AzureRmAvSet-LOG" + "-" + $StartTime + ".log"
 $TranscriptFile = "New-AzureRmAvSet-TRANSCRIPT" + "-" + $StartTime + ".log"
@@ -323,14 +324,6 @@ Do
 } #end Do
 Until (($rg) -match '^rg\d{2}$')
 
-
-Do 
-{
- # This is a uniquely assigned number for each course attendee so that the domain and Azure resources will also have unique names within the same course
- # For class-wide demo scripts, this number will be the last 4 digits of the request number
- [string]$AttendeeNum = Read-Host "Please enter the 4 digit number. You can for example, use the 24-hr clock time, i.e. [1417]"
-}
-Until ($AttendeeNum -match '^[0-9][0-9][0-9][0-9]$')
 
 # todo: Remove instance count for Windows Machine
 <#
@@ -468,9 +461,9 @@ $Header = "LINUX LAB DEPLOYMENT EXCERCISE: " + $StartTime
 
 # Create and populate site, subnet and VM properties of the domain with property-value pairs
 $ObjDomain = [PSCustomObject]@{
- pFQDN = "R" + $AttendeeNum + $gtld
- pDomainName = "R" + $AttendeeNum
- pSite = $SiteNamePrefix + $AttendeeNum
+ pFQDN = "R" + $time24hr + $gtld
+ pDomainName = "R" + $time24hr
+ pSite = $SiteNamePrefix + $time24hr
  # Subnet names matches the VM platforms (WS = Windows Server, LS = Linux Servers)
  pSubNetWS = "WS"
  pSubNetLS = "LS"
@@ -525,7 +518,7 @@ Write-ToConsoleAndLog -Output "Since only 1 instance of a Windows and 1 instance
  $SummObj = [PSCustomObject]@{
  SUBSCRIPTION = $Subscription.ToUpper()
  RESOURCEGROUP = $rg
- ATTENDEENUM = $AttendeeNum.ToUpper()
+ ATTENDEENUM = $time24hr.ToUpper()
  DOMAINFQDN = $ObjDomain.pFQDN.ToUpper()
  DOMAINNETBIOS = $ObjDomain.pDomainName.ToUpper()
  SITENAME = $ObjDomain.pSite.ToUpper()
@@ -598,12 +591,12 @@ Function Add-WindowsVm2016
  # Add a random infix (4 numeric digits) inside the Dnslabel name to avoid conflicts with existing deployments generated from this script. The -pip suffix indicates this is a public IP
  New-RandomString
  $DnsLabelInfix = $RandomString.SubString(8,4)
- $DomainLabel = $objDomain.pWs2016.ToLower() + $DnsLabelInfix + "-pip"
+ $DomainLabel = $Ws2016 + $DnsLabelInfix + "-pip"
  $DomainLabel = $DomainLabel.ToLower()
-
  Write-WithTime -Output "Creating public IP..." -Log $Log
  # Now we can string all the pre-requisites together to construct both the VIP and NIC
  $wsPip = New-AzureRmPublicIpAddress -ResourceGroupName $rg -Name $wsPipName -Location $Region -AllocationMethod Static -DomainNameLabel $DomainLabel -Verbose
+
  Write-WithTime -Output "Creating NIC..." -Log $Log
  $wsNic = New-AzureRmNetworkInterface -ResourceGroupName $rg -Name $wsNicName -Location $Region -PrivateIpAddress "10.10.10.$x" -SubnetId $Vnet.Subnets[0].Id -PublicIpAddressId $wsPip.Id -Verbose
  
