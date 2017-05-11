@@ -270,12 +270,71 @@ If (!(Get-Module -Name WriteToLogs))
 
 $BeginTimer = Get-Date -Verbose
 
+$cspCode = "AZR"
+
+$RegionCode = @{
+	EAAS1 = "eastasia"
+	SEAS1 = "southeastasia"
+	CEUS1 = "centralus"
+	EAUS1 = "eastus"
+	EAUS2 = "eastus2"
+	WEUS1 = "westus"
+	NCUS1 = "northcentralus"
+	SCUS1 = "southcentralus"
+	NREU1 = "northeurope"
+	WEEU1 = "westeurope"
+	WEJP1 = "japanwest"
+	EAJP1 = "japaneast"
+	STBR1 = "brazilsouth"
+	EAAU1 = "australiaeast"
+	SEAU1 = "australiasoutheast"
+	STIN1 = "southindia"
+	CEIN1 = "centralindia"
+	WEIN1 = "westindia"
+	CECA1 = "canadacentral"
+	EACA1 = "canadaeast"
+	STUK1 = "uksouth"
+	WEUK1 = "ukwest"
+	WCUS1 = "westcentralus"
+	WEUS2 = "westus2"
+} #end HashTable
+
+$envCode = @{
+	TST = "Test"
+	DEV = "Development"
+	PRD = "Production"
+	PRP = "Pre-Production"
+} #end Hash Table
+
+$tierCode = @{
+	DMZ = "De-Militarized Zone"
+	IAM = "Identity and Access Management"
+	PRE = "Presentation"
+	APP = "Application"
+	DTA = "Data"
+} #end Hash Table 
+
+$functionCode = @{
+	ADDS = "Domain Controller"
+	SQLS = "SQL Server"
+	POSH = "PowerShell Server"
+	WEBS = "Web Server"
+	SHRP = "SharePoint Server"
+	WNDS = "Generic Windows Server"
+	LNUX = "Generic Linux Server"
+} #end Hash Table
+
+$winFunctionCode = "WNDS"
+$lnxFuncitonCode = "LNUX"
+
+$seriesPrefix = "0"
+
 Do
 {
- # Subscription name
- (Get-AzureRmSubscription).SubscriptionName
- [string] $Subscription = Read-Host "Please enter your subscription name, i.e. [MIAC | MSFT] "
- $Subscription = $Subscription.ToUpper()
+	# Subscription name
+	(Get-AzureRmSubscription).SubscriptionName
+	[string]$Subscription = Read-Host "Please enter your subscription name, i.e. [MIAC | MSFT] "
+	$Subscription = $Subscription.ToUpper()
 } #end Do
 Until (($Subscription) -ne $null)
 
@@ -297,14 +356,6 @@ Do
  [string]$AttendeeNum = Read-Host "Please enter the 4 digit number. You can for example, use the 24-hr clock time, i.e. [1417]"
 }
 Until ($AttendeeNum -match '^[0-9][0-9][0-9][0-9]$')
-
-Do
-{
- # The site code refers to a 3 letter airport code of the nearest major airport to the training site
- [string]$SiteCode = Read-Host "Please enter your 3 character site code, i.e. [ATL] "
- $SiteCode = $SiteCode.ToUpper()
-} #end Do
-Until ($SiteCode -match '^[A-Z]{3}$')
 
 # todo: Remove instance count for Windows Machine
 <#
@@ -338,7 +389,7 @@ Do
  Write-ToConsoleAndLog -Output "" -Log $Log
  Write-ToConsoleAndLog -Output $Regions -Log $Log
  Write-ToConsoleAndLog -Output "" -Log $Log
- $EnterRegionMessage = "Please enter the geographic location (Azure Data Center Region) to which you would like to deploy these resources, i.e. [eastus2 | westus2]"
+ $EnterRegionMessage = "Please enter the geographic location (Azure Data Center Region) for resources, i.e. [eastus2 | westus2]"
  Write-ToLogOnly -Output $EnterRegionMessage -Log $Log
  [string]$Region = Read-Host $EnterRegionMessage
  $Region = $Region.ToUpper()
@@ -348,6 +399,12 @@ Do
 Until ($Region -in $Regions)
 
 New-AzureRmResourceGroup -Name $rg -Location $Region -Verbose
+
+$azRegionCode = $RegionCode.Keys | Where-Object { $RegionCode[$_] -eq "$Region" }
+
+# linemark
+$WinVmNamePrefix = $cspCode + $azRegionCode + $winFunctionCode + $seriesPrefix
+$LnxVmNamePrefix = $cspCode + $azRegionCode + $lnxFuncitonCode + $seriesPrefix
 
 # https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cli-ps-findimage
 
@@ -444,9 +501,9 @@ $ObjDomain = [PSCustomObject]@{
  pSubNetWS = "WS"
  pSubNetLS = "LS"
  pWs2016prefix = $SiteCode + "WS0" # Based on the latest image of Windows Server 2016
- pLsUbuntu = $SiteCode + "LS01" # Based on the latest image of Linux UbuntuServer 17.04-LTS
- pLsCentOs = $SiteCode + "LS02" # Based on the latest image of Linux CentOS 7.3
- pLsOpenSUSE = $SiteCode + "LS03" # Based on the latest image of Linux OpenSUSE-Leap 42.2
+ pLsUbuntu = $LnxVmNamePrefix + 1 # Based on the latest image of Linux UbuntuServer 17.04-LTS
+ pLsCentOs = $LnxVmNamePrefix + 2 # Based on the latest image of Linux CentOS 7.3
+ pLsOpenSUSE = $LnxVmNamePrefix + 3 # Based on the latest image of Linux OpenSUSE-Leap 42.2
 } #end $ObjDomain
 
 # 3 Windows VMs will be created
@@ -755,7 +812,7 @@ else
  Write-ToConsoleAndLog -Output "Deploying environment..." -Log $Log
  For ($w = 1; $w -le $WindowsInstanceCount; $w++)
 	{
-		$Ws2016 = $ObjDomain.pWs2016prefix + $w 
+		$Ws2016 = $WinVmNamePrefix + $w 
 		Write-WithTime -Output "Building $Ws2016" -Log $Log
     	Add-WindowsVm2016
  	} #end ForEach
