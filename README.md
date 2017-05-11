@@ -1,2 +1,37 @@
-# 0008-New-PowerShellOnLinuxLab
-This script will create 1 Windows Server 2016 and 3 Linux Servers: 1 x Ubuntu 16.04 LTS, 1 x CentOS 7.3 and 1 x openSUSE-Leap42.2 to demonstrate how PowerShell can be installed and configured to run on each of the Linux distributions, as well as accepting remote operations from the Windows Server 2016 machine.
+## Welcome to GitHub Pages
+
+You can use the [editor on GitHub](https://github.com/autocloudarc/0008-New-PowerShellOnLinuxLab/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+
+Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+
+### Markdown
+
+Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+
+```markdown
+Syntax highlighted code block
+
+# Header 1
+## Header 2
+### Header 3
+
+- Bulleted
+- List
+
+1. Numbered
+2. List
+
+**Bold** and _Italic_ and `Code` text
+
+[Link](url) and ![Image](src)
+```
+
+For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+
+### Jekyll Themes
+
+Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/autocloudarc/0008-New-PowerShellOnLinuxLab/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+
+### Support or Contact
+
+Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
