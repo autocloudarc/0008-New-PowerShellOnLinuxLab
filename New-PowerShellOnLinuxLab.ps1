@@ -500,7 +500,7 @@ $ObjDomain = [PSCustomObject]@{
  # Subnet names matches the VM platforms (WS = Windows Server, LS = Linux Servers)
  pSubNetWS = "WS"
  pSubNetLS = "LS"
- pWs2016prefix = $SiteCode + "WS0" # Based on the latest image of Windows Server 2016
+ pWs2016prefix = $WinVmNamePrefix # Based on the latest image of Windows Server 2016
  pLsUbuntu = $LnxVmNamePrefix + 1 # Based on the latest image of Linux UbuntuServer 17.04-LTS
  pLsCentOs = $LnxVmNamePrefix + 2 # Based on the latest image of Linux CentOS 7.3
  pLsOpenSUSE = $LnxVmNamePrefix + 3 # Based on the latest image of Linux OpenSUSE-Leap 42.2
@@ -560,9 +560,9 @@ Write-ToConsoleAndLog -Output "Since only 1 instance of a Windows and 1 instance
  LSSUBNET = $ObjDomain.pSubNetLS.ToUpper()
  NSGLS = $nsgLsSubnetName.ToUpper()
  NSGWS = $nsgWsSubnetName.ToUpper()
- WS01 = $ObjDomain.pWs2016.ToUpper() + 1
- WS02 = $ObjDomain.pWs2016.ToUpper() + 2
- WS03 = $ObjDomain.pWs2016.ToUpper() + 3
+ WS01 = $ObjDomain.pWs2016prefix.ToUpper() + 1
+ WS02 = $ObjDomain.pWs2016prefix.ToUpper() + 2
+ WS03 = $ObjDomain.pWs2016prefix.ToUpper() + 3
  LSUB = $ObjDomain.pLsUbuntu.ToUpper()
  LSCO = $ObjDomain.pLsCentOS.ToUpper()
  LSOS = $ObjDomain.pLsOpenSUSE.ToUpper()
