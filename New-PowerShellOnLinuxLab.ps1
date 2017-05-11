@@ -754,7 +754,7 @@ else
  # Proceed with deployment
  Write-ToConsoleAndLog -Output "Deploying environment..." -Log $Log
  Write-WithTime -Output "Building $($ObjDomain.pWs2016)..." -Log $Log
- For ($w = 1; $w++; $w -le $WindowsInstanceCount)
+ For ($w = 1; $w -le $WindowsInstanceCount; $w++)
  {
     Add-WindowsVm2016
  } #end ForEach
