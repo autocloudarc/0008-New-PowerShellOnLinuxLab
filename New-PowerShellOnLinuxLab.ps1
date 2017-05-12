@@ -224,13 +224,13 @@ REFERENCES:
 <# 
 TASK ITEMS
 0001. Remove public IP on all except the fist Windows VM
-0002.cReplace $time24hr variable with $StartTime
 0003. Assign availability sets to both Windows and Linux machines: 
 #>
 
 # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
-Clear-AzureProfile -Force
-Login-AzureRmAccount
+# linemark
+# Clear-AzureProfile -Force
+# Login-AzureRmAccount
 
 # Construct custom path for log files 
 $LogDir = "New-AzureRmAvSet"
@@ -316,25 +316,13 @@ Do
 Until (($Subscription) -ne $null)
 
 # Selects subscription based on subscription name provided in response to the prompt above
-Select-AzureRmSubscription -SubscriptionId (Get-AzureRmSubscription -SubscriptionName $Subscription).SubscriptionId
-
+Select-AzureRmSubscription -SubscriptionName $Subscription
 Do
 {
  # Resource Group name
  [string]$rg = Read-Host "Please enter a new resource group name [rg##] "
 } #end Do
 Until (($rg) -match '^rg\d{2}$')
-
-
-# todo: Remove instance count for Windows Machine
-<#
-Do
-{
- # The site code refers to a 3 letter airport code of the nearest major airport to the training site
- [int]$InstanceCount = Read-Host "Please enter the total number of Windows instances required [1-5] "
-} #end Do
-Until ($InstanceCount -le 5 -AND $InstanceCount -ne $null)
-#>
 
 # Create and populate prompts object with property-value pairs
 # PROMPTS (PromptsObj)
@@ -400,13 +388,6 @@ versionUbuntu = $version
 versionCentOS = $version
 versionOpenSUSE = $version
 } #end ht
-
-<#
-imageNameWindows = Get-AzureRmVMImage –Location $Region –Offer $imageobj.offerWindows –PublisherName $imageObj.publisherWindows –SKUs $imageObj.skuWindows
-imageNameUbuntu = Get-AzureRmVMImage –Location $Region –Offer $imageObj.offerUbuntu –PublisherName $imageObj.publisherUbuntu –SKUs $imageObj.skuUbuntu
-imageNameCentOS = Get-AzureRmVMImage –Location $Region –Offer $imageObj.offerCentOS –PublisherName $imageObj.publisherCentOS –SKUs $imageObj.skuCentOS
-imageNameOpenSUSE = Get-AzureRmVMImage –Location $Region –Offer $imageObj.offerOpenSUSE –PublisherName $imageObj.publisherOpenSUSE –SKUs $imageObj.skuOpenSUSE
-#>
 
 # User name is specified directly in script
 $windowsAdminName = "ent.g001.s001"
@@ -705,7 +686,7 @@ Function Add-LinuxVm
   Write-WithTime -Output "VM $LinuxSystem doesn't already exist. Configuring..." -Log $Log
   
   # Setup new vm configuration
-   $lsVmConfig = New-AzureRmVMConfig –VMName $LinuxSystem -VMSize $lsVmSize -AvailabilitySetId $lnxAvSet.Id | 
+   $lsVmConfig = New-AzureRmVMConfig –VMName $LinuxSystem -VMSize $lsVmSize -AvailabilitySetId $lnxAvSet.Id  | 
    Set-AzureRmVMOperatingSystem -Linux -ComputerName $LinuxSystem -Credential $linuxCred -DisablePasswordAuthentication | 
    Set-AzureRmVMSourceImage -PublisherName $publisher -Offer $offer -Skus $sku -Version $version | 
    Set-AzureRmVMOSDisk -Name $lsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
