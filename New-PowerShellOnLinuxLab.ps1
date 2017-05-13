@@ -218,6 +218,12 @@ REFERENCES:
 21.https://blogs.technet.microsoft.com/heyscriptingguy/2016/10/05/part-2-install-net-core-and-powershell-on-linux-using-dsc/
 22.https://blogs.technet.microsoft.com/heyscriptingguy/2016/09/28/part-1-install-bash-on-windows-10-omi-cim-server-and-dsc-for-linux/
 23.https://docs.microsoft.com/en-us/azure/virtual-machines/linux/tutorial-manage-vm
+24.https://github.com/PowerShell/PowerShell/blob/master/docs/installation/linux.md
+25.https://www.ostechnix.com/how-to-install-windows-powershell-in-linux/
+26.https://blogs.technet.microsoft.com/heyscriptingguy/2016/09/28/part-1-install-bash-on-windows-10-omi-cim-server-and-dsc-for-linux/
+27.https://blogs.technet.microsoft.com/heyscriptingguy/2016/10/05/part-2-install-net-core-and-powershell-on-linux-using-dsc/
+28.https://blogs.msdn.microsoft.com/linuxonazure/2017/02/12/extensions-custom-script-for-linux/
+29.https://azure.microsoft.com/en-us/blog/automate-linux-vm-customization-tasks-using-customscript-extension/
 ****************************************************************************************************************************************************************************************************************
 #>
 
