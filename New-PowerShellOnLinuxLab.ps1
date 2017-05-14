@@ -234,9 +234,8 @@ TASK ITEMS
 #>
 
 # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
-# linemark
-# Clear-AzureProfile -Force
-# Login-AzureRmAccount
+Clear-AzureProfile -Force
+Login-AzureRmAccount
 
 # Construct custom path for log files 
 $LogDir = "New-AzureRmAvSet"
@@ -403,8 +402,8 @@ $linuxAdminName = "linuxuser"
 $wsVmSize = "Standard_D1_v2"
 $lsVmSize = $wsVmSize
 # Availability sets
-$AvSetLsName = "AvSetLinux"
-$AvSetWsName = "AvSetWindows"
+$AvSetLsName = "AvSetLNUX"
+$AvSetWsName = "AvSetWNDS"
 $winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 3 $Region -Managed -Verbose
 $lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 3 $Region -Managed -Verbose
 $SiteNamePrefix = "net"
@@ -414,7 +413,7 @@ $gtld = ".lab"
 $windowsCred = Get-Credential -UserName $windowsAdminName -Message "Enter password for user: $windowsAdminName"
 # $wsPw = $windowsCred.GetNetworkCredential().password
 
-# Define Linux credential object
+# Define Linux credential object using SSH public key
 Write-WithTime -Output "Creating Linux credential object..." -Log $Log
 $lsSecurePassword = ConvertTo-SecureString ' ' -AsPlainText -Force
 $linuxCred = New-Object System.Management.Automation.PSCredential ($linuxAdminName, $lsSecurePassword)
@@ -424,12 +423,12 @@ Write-WithTime -Output "A public ssh rsa key is required for SSH authentication 
 Do
 {
  [string]$sshPublicKeyPath = Read-Host "Please enter the full path to the SSH Putty public key that will be used to authenticate to the Linux VM [ c:\<path>\<PublicKeyFile> ] "
- $keyContent = Get-Content -Path $sshPublicKeyPath
+ $publickeyContent = Get-Content -Path $sshPublicKeyPath
  If (Test-Path -Path $sshPublicKeyPath)
  {
-  If ($keyContent -ne $null)
+  If ($publicKeyContent -ne $null)
   {
-   $sshPublicKey = $keyContent
+   $sshPublicKey = $publickeyContent
   } #end if
   else
   {
@@ -441,13 +440,14 @@ Do
   Write-WithTime -Output "The SSH key path was not found..." -Log $Log
  } #end else
 } #end do
-Until ((Test-Path -Path $sshPublicKeyPath) -AND ($keyContent))
+Until ((Test-Path -Path $sshPublicKeyPath) -AND ($publicKeyContent))
 
 # Construct the destination authorized key path for the Linux server
 $sshAuthorizedKeysPath = "/home/" + $linuxAdminName + "/.ssh/authorized_keys"
 
 $DelimDouble = ("=" * 100 )
 $Header = "LINUX LAB DEPLOYMENT EXCERCISE: " + $StartTime
+
 
 # Create and populate site, subnet and VM properties of the domain with property-value pairs
 $ObjDomain = [PSCustomObject]@{
@@ -553,7 +553,8 @@ Function New-RandomString
  } #end ForEach
 
  [string]$RandomStringWithSpaces = $PasswordArray
- [string]$Script:RandomString = $RandomStringWithSpaces.Replace(" ","") 
+ [string]$RandomString = $RandomStringWithSpaces.Replace(" ","") 
+ Return [string]$RandomString
 } #end Function
 
 # Create Windows VM 
@@ -676,6 +677,19 @@ Function Add-LinuxVm
         $offer = $imageObj.offerCentOS
         $sku = $imageObj.skuCentOS
         $version = $imageObj.versionCentOS
+
+        $cseExtensionName = 'CustomScriptForLinux'
+        $csePublisher = 'Microsoft.OSTCExtensions'
+        $cseVersion = '1.5'
+        $PublicConf = "{
+           `"fileUris`": [`"$scriptBlobUri`"],
+            `"commandToExecute`": `"sh $lnxCustomScript`"
+        }"
+        $PrivateConf = "{
+            `"storageAccountName`": `"$saName`",
+            `"storageAccountKey`": `"$storageKeyPri`"
+        }"
+        $tagLinuxDistroUrn = $imageObj.urnCentOS
     } #end 2 
 
   3 {
@@ -703,7 +717,7 @@ Function Add-LinuxVm
   # Configure SSH Keys
   # http://technodrone.blogspot.com/2010/04/those-annoying-thing-in-powershell.html
   Add-AzureRmVMSshPublicKey -VM $lsVmConfig -KeyData ($sshPublicKey | Out-String) -Path $sshAuthorizedKeysPath
-
+  
   # Create new VM
   Write-WithTime -Output "Creating VM from configuration..." -Log $Log
   New-AzureRmVM -ResourceGroupName $rg -Location $Region -VM $lsVmConfig -Verbose
@@ -722,12 +736,28 @@ Function Add-LinuxVm
   # Update disk configuration
   Write-WithTime -Output "Applying new disk configurations..." -Log $Log
   Update-AzureRmVM -ResourceGroupName $rg -VM $vmLs -Verbose
+
+  # Apply custom script to CentOS VM
+  If ($i -eq 2)
+  {
+    Set-AzureRmVMExtension -ResourceGroupName $rg -VMName $LinuxSystem -Location $Region `
+    -Name $cseExtensionName -Publisher $csePublisher `
+    -ExtensionType $cseExtensionName -TypeHandlerVersion $cseVersion `
+    -SettingString $PublicConf -ProtectedSettingString $PrivateConf
+   } #end if
  } #end If
  else
  {
   Write-ToConsoleAndLog -Output "$LinuxSystem already exists..." -Log $Log
- }
-
+ } #end else
+ 
+ # Add tag for OS version details
+ Switch ($i) 
+ {
+  1 { Set-AzureRmResource -Tag @{ OsVersion="$($imageObj.urnUbuntu)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force }
+  2 { Set-AzureRmResource -Tag @{ OsVersion="$($imageObj.urnCentOS)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force  }
+  3 { Set-AzureRmResource -Tag @{ OsVersion="$($imageObj.urnOpenSUSE)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force }
+ } #end switch
 } #End function
 
 #endregion FUNCTIONS
@@ -765,6 +795,51 @@ if ($ResponsesObj.pProceed -eq "N" -OR $ResponsesObj.pProceed -eq "NO")
 else 
 {
  # Proceed with deployment
+
+ # NOTE: This storage account will only be used for diagnostic logging and to host any custom scripts or DSC configuration, data files, and modules if required.
+ # Storage accounts will not be used for hosting the OS or data disk vhd drives for the VMs. This is because managed disks will be used instead for all VMs.
+
+ Write-WithTime -Output "Create storage account for diagnostics logs and staging artifacts." -Log $Log
+
+ <#
+ Create a new random string, then extract the 4 lower-case characters and the 4 digits generated to use as the last characters for the storage account name suffix.
+ If the storage account name has already been taken, i.e. not available, continue to generate a new name that can be used.
+ #>
+
+ Do 
+ {
+  $randomString = New-RandomString
+  $saName  = $randomString.Substring(4,8)
+ } #end while
+ While (!((Get-AzureRmStorageAccountNameAvailability -Name $saName).NameAvailable)) 
+ New-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Location $Region -Type Standard_LRS -Kind Storage -Verbose
+ 
+ $saResource = Get-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Verbose
+ $storageKeyPri = (Get-AzureRmStorageAccountKey -ResourceGroupName $rg -Name $saName).Value[0]
+
+ # linemark: Prompt for input?
+ # Specify custom script directory, file and full local source path
+ $scriptDir = "c:\data\git\0000-scripts"
+ $lnxCustomScript = "Install-OmiCimServerOnLinuxAndConfigure.sh"
+ $lnxCustomScriptPath = Join-Path $scriptDir -ChildPath $lnxCustomScript
+
+ $saContainerStaging = "staging"
+ # For future DSC use
+ $saContainerDSC = "windows-powershell-dsc"
+
+ # Create blob containers
+ If ($saResource -ne $null)
+ {
+  # Create container for scripts and temporary secrets
+  New-AzureStorageContainer -Name $saContainerStaging -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+  Set-AzureStorageBlobContent -File $lnxCustomScriptPath -Blob $lnxCustomScript -Container $saContainerStaging -BlobType Block -Context $saResource.Context -Force -Verbose
+  # Create container for DSC artifacts
+  New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+ } #end if
+ 
+ # Construct full path to custom script block blob
+ $scriptBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerStaging + "/" + $lnxCustomScript
+
  Write-ToConsoleAndLog -Output "Deploying environment..." -Log $Log
  For ($w = 1; $w -le $WindowsInstanceCount; $w++)
 	{
