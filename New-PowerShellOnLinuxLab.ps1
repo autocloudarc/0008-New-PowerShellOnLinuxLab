@@ -689,7 +689,6 @@ Function Add-LinuxVm
             `"storageAccountName`": `"$saName`",
             `"storageAccountKey`": `"$storageKeyPri`"
         }"
-        $tagLinuxDistroUrn = $imageObj.urnCentOS
     } #end 2 
 
   3 {
@@ -737,14 +736,23 @@ Function Add-LinuxVm
   Write-WithTime -Output "Applying new disk configurations..." -Log $Log
   Update-AzureRmVM -ResourceGroupName $rg -VM $vmLs -Verbose
 
-  # Apply custom script to CentOS VM
-  If ($i -eq 2)
-  {
-    Set-AzureRmVMExtension -ResourceGroupName $rg -VMName $LinuxSystem -Location $Region `
-    -Name $cseExtensionName -Publisher $csePublisher `
-    -ExtensionType $cseExtensionName -TypeHandlerVersion $cseVersion `
-    -SettingString $PublicConf -ProtectedSettingString $PrivateConf
-   } #end if
+  # Apply custom script to all Linux VMs
+  $cseExtensionName = 'CustomScriptForLinux'
+  $csePublisher = 'Microsoft.OSTCExtensions'
+  $cseVersion = '1.5'
+  $PublicConf = "{
+    `"fileUris`": [`"$scriptBlobUri`"],
+    `"commandToExecute`": `"sh $lnxCustomScript`"
+    }"
+  $PrivateConf = "{
+    `"storageAccountName`": `"$saName`",
+    `"storageAccountKey`": `"$storageKeyPri`"
+    }"
+
+  Set-AzureRmVMExtension -ResourceGroupName $rg -VMName $LinuxSystem -Location $Region `
+  -Name $cseExtensionName -Publisher $csePublisher `
+  -ExtensionType $cseExtensionName -TypeHandlerVersion $cseVersion `
+  -SettingString $PublicConf -ProtectedSettingString $PrivateConf
  } #end If
  else
  {
