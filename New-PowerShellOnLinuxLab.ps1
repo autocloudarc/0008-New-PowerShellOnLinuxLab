@@ -1,279 +1,190 @@
 ﻿#requires -version 5.0
 #requires -RunAsAdministrator
 <#
-****************************************************************************************************************************************************************************************************************
-PROGRAM		: New-PowerShellOnLinuxLab.ps1
-
 DESCRIPTION	:
-This script creates the following 6 VMs: 
+This script creates the following 6 VMs, however the number of Windows VMs is user specified from 0-3. 
 1) 3 x Windows Server 2016
 2) 1 x UbuntuServer LTS 16.04
 3) 1 x CentOS 7.3
 4) 1 x openSUSE-Leap 42.2
-Tasks that can be practiced with both a Windows and Linux VMs for Linux deployments is provided here:
 
-1. Install Chocolatey from https://chocloatey.org on the Windows Server to support automated installation of 3rd party tools such as puttygen and putty.
-    a. Invoke-Expression ((new-object net.webclient).DownloadString('https://Chocolatey.org/Install.ps1')) 
-    b. New-Item -Path c:\data, c:\data\certs, c:\data\scripts -ItemType Directory
-    c. Set-Location c:\data\certs
+.SYNOPSIS
+   	Creates up to 6 VMs for an Azure Linux Windows PowerShell Lab consisting of 0-3 Windows VMs, and 3 Linux VMs (Ubuntu, CentOS and openSUSE). 
+.DESCRIPTION
+	This script will create a set of Azure VMs to demonstrate Windows PowerShell and Azure Automation DSC functionality on Linux VMs. The set of VMs that will be created are listed below in the .OUTPUTS help tag. 
+    however the number of Windows VMs is user specified from 0-3, since the deployment of Windows VMs are not essential for a basic demonstration of PowerShell on Linux, but will be required if Windows Push or Pull 
+    servers will be used in the lab. This project will be enhaced to eventually include those features also, but initially, the focus will be on configuring the Linux distros to support Azure Automation DSC and
+    PowerShell.    
+.EXAMPLE
+   	New-PowerShellOnLinuxLab
+.PARAMETERS
+    NA
+.OUTPUTS
+    1) 3 x Windows Server 2016
+    2) 1 x UbuntuServer LTS 16.04
+    3) 1 x CentOS 7.3
+    4) 1 x openSUSE-Leap 42.2
+.NOTES
+   	CURRENT STATUS: In development
+    REQUIREMENTS: SSH key pair to authenticate to the Linux VMs. When the scrit executes, a prompt will appear asking for the public key path. 
+                  WriteToLogs module (https://www.powershellgallery.com/packages/WriteToLogs). This will be downloaded and installed automatically.
 
-2. Install the Windows Desktop for GitHub from https://desktop.github.com by doing the following:
-    a. Download GitHubSetup.exe
-    b. Install GitHubSetup.exe
-    c. Open the Git Shell console
-   *NOTE* This provides a console in a Windows environment to use openssl to create the required ssh key pairs for ssh login to the Linux VMs.
+   	LIMITATIONS	: Windows VM configurations and integration as Push/Pull servers.
+   	AUTHOR(S)  	: Preston K. Parsard
+   	EDITOR(S)  	: Preston K. Parsard
+   	KEYWORDS   	: Linux, Azure, PowerShell, DSC
+   
+	REFERENCES : 
+    1. https://gallery.technet.microsoft.com/scriptcenter/Build-AD-Forest-in-Windows-3118c100
+    2. http://blogs.technet.com/b/heyscriptingguy/archive/2013/06/22/weekend-scripter-getting-started-with-windows-azure-and-powershell.aspx
+    3. http://michaelwasham.com/windows-azure-powershell-reference-guide/configuring-disks-endpoints-vms-powershell/
+    4. http://blog.powershell.no/2010/03/04/enable-and-configure-windows-powershell-remoting-using-group-policy/
+    5. http://azure.microsoft.com/blog/2014/05/13/deploying-antimalware-solutions-on-azure-virtual-machines/
+    6. http://blogs.msdn.com/b/powershell/archive/2014/08/07/introducing-the-azure-powershell-dsc-desired-state-configuration-extension.aspx
+    7. http://trevorsullivan.net/2014/08/21/use-powershell-dsc-to-install-dsc-resources/
+    8. http://blogs.msdn.com/b/powershell/archive/2014/07/21/creating-a-secure-environment-using-powershell-desired-state-configuration.aspx
+    9. http://blogs.technet.com/b/ashleymcglone/archive/2015/03/20/deploy-active-directory-with-powershell-dsc-a-k-a-dsc-promo.aspx
+    10.http://blogs.technet.com/b/heyscriptingguy/archive/2013/03/26/decrypt-powershell-secure-string-password.aspx
+    11.http://blogs.msdn.com/b/powershell/archive/2014/09/10/secure-credentials-in-the-azure-powershell-desired-state-configuration-dsc-extension.aspx
+    12.http://blogs.technet.com/b/keithmayer/archive/2014/10/24/end-to-end-iaas-workload-provisioning-in-the-cloud-with-azure-automation-and-powershell-dsc-part-1.aspx
+    13.http://blogs.technet.com/b/keithmayer/archive/2014/07/24/step-by-step-auto-provision-a-new-active-directory-domain-in-the-azure-cloud-using-the-vm-agent-custom-script-extension.aspx
+    14.https://blogs.msdn.microsoft.com/cloud_solution_architect/2015/05/05/creating-azure-vms-with-arm-powershell-cmdlets/
+    15.https://msdn.microsoft.com/en-us/powershell/gallery/psget/script/psget_new-scriptfileinfo
+    16.https://msdn.microsoft.com/en-us/powershell/gallery/psget/script/psget_publish-script
+    17.https://www.powershellgallery.com/packages/WriteToLogs
+    18.https://chocolatey.org
+    19.https://desktop.github.com
+    20.https://www.ostechnix.com/how-to-install-windows-powershell-in-linux/
+    21.https://blogs.technet.microsoft.com/heyscriptingguy/2016/10/05/part-2-install-net-core-and-powershell-on-linux-using-dsc/
+    22.https://blogs.technet.microsoft.com/heyscriptingguy/2016/09/28/part-1-install-bash-on-windows-10-omi-cim-server-and-dsc-for-linux/
+    23.https://docs.microsoft.com/en-us/azure/virtual-machines/linux/tutorial-manage-vm
+    24.https://github.com/PowerShell/PowerShell/blob/master/docs/installation/linux.md
+    25.https://www.ostechnix.com/how-to-install-windows-powershell-in-linux/
+    26.https://blogs.technet.microsoft.com/heyscriptingguy/2016/09/28/part-1-install-bash-on-windows-10-omi-cim-server-and-dsc-for-linux/
+    27.https://blogs.technet.microsoft.com/heyscriptingguy/2016/10/05/part-2-install-net-core-and-powershell-on-linux-using-dsc/
+    28.https://blogs.msdn.microsoft.com/linuxonazure/2017/02/12/extensions-custom-script-for-linux/
+    29.https://azure.microsoft.com/en-us/blog/automate-linux-vm-customization-tasks-using-customscript-extension/
 
-3. Prepare the Windows directory structure by adding the c:\data, c:\data\certs and c:\data\scripts directory
-    a. New-Item -Path c:\data, c:\data\certs, c:\data\scripts -ItemType Directory
-    b. Set-Location c:\data\certs
-    *NOTE* In a production environment, an additional data drive should be added for certificates and scripts, and the scripts should be added to a source control repository.
+    The MIT License (MIT)
+    Copyright (c) 2017 Preston K. Parsard
 
-4. The ssh key pair can now be created to support ssh login to the Linux VMs.
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
+    to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-    *NOTE* Options 
-    req: CSR
-    -x509: certificate type
-    -nodes: key is unencrypted
-    -days: 365 is the validity period
-    -keyout: output file for key
-    -out: output file for certificate
-    rsa: encryption algorithm
-    2048 bit key length
-    
-    a. openssl.exe req -x509 -nodes -days 365 -newkey rsa:2048 -keyout SSHPrivateKey.key -out SSHCert.pem
-    b. Country Name (2 letter code) [AU]:US
-    c. State or Province Name (full name [some-state]:NY
-    d. Locality name (eg, city) []:New York
-    e. Organization Unit ame (eg, section) []:IT
-    f. Common name (e.g. server FQDN or YOUR name) []:linux
-    g. Email Address: []:admin@contoso.com
-    
-    h. ls -l
+    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. 
 
-5. The ssh private key must then be converted to the Putty ssh intermediary rsa format for subsequent upgrade to the Putty SSH version.
-    i. openssl.exe rsa -in ./SSHPrivateKey.key -out SSHPrivateKey_rsa
+    LEGAL DISCLAIMER:
+    This Sample Code is provided for the purpose of illustration only and is not intended to be used in a production environment.  
+    THIS SAMPLE CODE AND ANY RELATED INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, 
+    INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.  
+    We grant You a nonexclusive, royalty-free right to use and modify the Sample Code and to reproduce and distribute the object code form of the Sample Code, provided that You agree: 
+    (i) to not use Our name, logo, or trademarks to market Your software product in which the Sample Code is embedded; 
+    (ii) to include a valid copyright notice on Your software product in which the Sample Code is embedded; and 
+    (iii) to indemnify, hold harmless, and defend Us and Our suppliers from and against any claims or lawsuits, including attorneys' fees, that arise or result from the use or distribution of the Sample Code.
+    This posting is provided "AS IS" with no warranties, and confers no rights.
 
-6. Install the various putty utlities, such as puttygen and putty using Chocoloatey. 
-    a. choco install putty -y
-    b. Puttygen will be used to convert the private ssh key to the Putty format with a pass-phrase and the Putty public key will aslo be saved.
-    c. Putty can now be used from the Windows machine to access the Linux server using it's Dynamic (private, IP address)
-
-7. After the Linux server is accessed, the Azure CLI 2.0 can be installed after first installing the appropriate pre-requisites:
-    --------------------------------------------------------------------
-    Platform              | Prerequisites
-    ----------------------|---------------------------------------------
-    Ubuntu 15.10 or 16.04 | sudo apt-get update && sudo apt-get install -y libssl-dev libffi-dev python-dev build-essential
-    Ubuntu 12.04 or 14.04 | sudo apt-get update && sudo apt-get install -y libssl-dev libffi-dev python-dev
-    Debian 8              | sudo apt-get update && sudo apt-get install -y libssl-dev libffi-dev python-dev build-essential
-    Debian 7              | sudo apt-get update && sudo apt-get install -y libssl-dev libffi-dev python-dev
-    CentOS 7.1 or 7.2     | sudo yum check-update; sudo yum install -y gcc libffi-devel python-devel openssl-devel
-    RedHat 7.2            | sudo yum check-update; sudo yum install -y gcc libffi-devel python-devel openssl-devel
-    SUSE OpenSUSE 13.2    | sudo zypper refresh && sudo zypper --non-interactive install gcc libffi-devel python-devel openssl-devel
-
-8. 4.0 Now that the pre-requisites have been installed, we can proceed with the Azure CLI 2.0 installation using the command below:
-    a. curl -L https://aka.ms/InstallAzureCli | bash
-
-9. Finally, we must restart the shell to apply the installation in our shell
-    a. exec -l $SHELL
-
-10. After a Linux image has been created and prepared for Azure in Hyper-V or VMWare, it can be uploaded using the following PowerShell script:
-$StorageAccountName = "<StorageAccountName>"
-$ImageName = "<ImageName>"
-$PathToLocalVhd = (Get-ChildItem -Path H:\vhdx).FullName | Where-Object { $_ -match 'JFKSVL04' } | Split-Path -Leaf
-$AzureImageDestination = "https://" + $StorageAccountName + ".blob.core.windows.net/vhds/" + $ImageName + ".vhd"
-Add-AzureRmVhd -ResourceGroupName rg00 -Destination "https://$StorageAccountName.blob.core.windows.net/vhds/$ImageName.vhd" -LocalFilePath $PathToLocalVhd
-
-11. Next, you can deploy the image by using any of the following methods:
-11a. Deploy from a quick start template at: https://azure.microsoft.com/en-us/resources/templates/201-vm-specialized-vhd/
-     1. The parameters required are:
-        DeployFromSpecializedVhd = @{
-        osDiskVhdUri = "https://rg00diag00.blob.core.windows.net/vhds/jfksvl04-syst.vhd"
-        osType = "Linux"
-        vmSize = "Standard_D1_v2"
-        vmName = AZREAUS2LNUX01
-        } #end ht
-
-# After the image has been uploaded, you will see:
-PS C:\WINDOWS\system32> C:\Users\TEMP.US.003\Desktop\New-AzureRmLinuxVhdUpload.ps1
-MD5 hash is being calculated for the file  H:\vhdx\JFKSVL04-SYST.vhd.
-MD5 hash calculation is completed.
-Elapsed time for the operation: 00:05:18
-Creating new page blob of size 32212255232... # 6 GB / hr?
-Detecting the empty data blocks in the local file.
-Detecting the empty data blocks completed.
-Elapsed time for upload: 03:40:40
-
-LocalFilePath             DestinationUri                                                 
--------------             --------------                                                 
-H:\vhdx\JFKSVL04-SYST.vhd https://rg00diag00.blob.core.windows.net/vhds/jfksvl04-syst.vhd
-
-
-11b. Deploy using Azure CLI 2.0: az vm image create <ImageName> --blob-url <BlobStorageURL>/<Container>/<VHDName> --os Linux <PathToVHDFile>
-11c. Using PowerShell and an ARM template: New-AzureRmResourceGroupDeployment -Name <deployment-name> -ResourceGroupName <resource-group-name> -TemplateUri https://raw.githubusercontent.com/azure/azure-quickstart-templates/master/201-vm-specialized-vhd/azuredeploy.json
-***Please rate this script if it has been helpful and feel free to ask questions or provide feedback at the Q&A tab to let me know how we can make it even better!*** 
-
-12. Deploy a Linux VM in Azure with Azure CLI 2.0.
-    https://docs.microsoft.com/en-us/azure/virtual-machines/linux/deploy-linux-vm-into-existing-vnet-using-cli
-
-12a. With managed disks
-az vm create \
-    --resource-group myResourceGroup \
-    --name myVM \
-    --image Debian \
-    --admin-username azureuser \
-    --ssh-key-value ~/.ssh/id_rsa.pub \
-    --nics myNic
-
-    mnemonic (azvmc-rniasn: az vm create –-resource-group <rg> --name <vmname> --image <family> --admin-username <username> --ssh-key-value ~/.ssh/id_rsa.pub –nics azreaus2lnux01-nic01 \
-    example: 
-
-az vm create --resource-group rg00 --name AZREAUS2LNUX03 --image CentOS --admin-username linuxadmin --generate-ssh-keys --nics lnux03-nic01 --public-ip-address-dns-name azreaus2lnux03-pip --location eastus2 --authentication-type ssh --vnet-address-prefix 10.1.1.0/26 --subnet-address-prefix 10.1.1.24/29 --public-ip-address-allocation static
-12b. Without managed disks
-        --use-unmanaged-disk \
-        --storage-account mystorageaccount
-
-13. Create a VM from your image resource with az vm create:
-az vm create --resource-group myResourceGroup --name myVMDeployed --image myImage --admin-username azureuser --ssh-key-value ~/.ssh/id_rsa.pub
-
-14. Create a vm from an available managed disk:
-az disk create -g rg00 --name LINUX-CENTOS-SYST  --location eastus2 --size-gb 30 --sku Standard_LRS --source "https://rg00diag00.blob.core.windows.net/vhds/jfksvl04-syst.vhd" --verbose
-
-az network nic create -g rg00 -n lnux03-nic-01 --subnet lnux --vnet vnet00 --verbose
-az network public-ip create -g rg00 -n lnux03-pip --dns-name azreaus2lnux03-pip
-a. az vm create -g rg00 -n azreaus2lnux03 --attach-os-disk linux-centos-syst --os-type linux --verbose
-b. az vm create -g rg00 -n AZREAUS2LNUX03 --attach-os-disk LINUX-CENTOS-SYST --os-type linux--admin-username linuxadmin --generate-ssh-keys --nics lnux03-nic01 --public-ip lnux03-pip --dns-name azreaus2lnux03-pip --location eastus2 --authentication-type ssh --vnet-address-prefix 10.1.1.0/26 --subnet-address-prefix 10.1.1.24/29 --public-ip-address-allocation static
-
-1. Build a machine in Azure and create a scale set.
-2. 
-3. Thursday. NSEC
-3. bin/az vm create -g test-oms -n ansible-trusty --attach-os-disk trusty-system01 --os-type linux --admin-username ansible --ssh-key-value ~/.ssh/azuretrusty.pub --nics trusty-ansible-nic --location eastus2 --authentication-type ssh --public-ip-address-allocation static
-
-1. az disk create -g rg00 --name LINUX-CENTOS-SYST  --location eastus2 --size-gb 30 --sku Standard_LRS --source "https://rg00diag00.blob.core.windows.net/vhds/jfksvl04-syst.vhd" --verbose
-2. az network nic create -g <rg> -n <nic-name> --subnet <subnet-name> --vnet <vnet-name> --verbose
-3. az network public-ip-address create -g <rg> -n <name-pip> --dns-name <dns-name-pip> --verbose 
-3. az vm create -g <rg> -n <vm-name> --attach-os-disk <os-disk-name> --os-type linux --admin-username <linux-username> --ssh-key-value ~/.ssh/rsa_id.pub --nics <nic-name> --location eastus2 --authentication-type ssh --public-ip-address-allocation static --verbose
-
-# DOCKER
-1. Install docker on an existing VM and run a container
-https://docs.microsoft.com/en-us/azure/virtual-machines/linux/dockerextension
-https://github.com/Azure/azure-docker-extension/blob/master/README.md#1-configuration-schema
-
-$resourceGroup = "rg00"
-$VMName = "AZREAUS2LNUX04"
-$location = "eastus2"
-$PublicSettings = '{"docker": {"port": "2375"},"compose": {"web": {"image": "nginx","ports": ["80:80"]}}}'
-
-Set-AzureRmVMExtension -ExtensionName "Docker" -ResourceGroupName $resourceGroup -VMName $vmName `
--Publisher "Microsoft.Azure.Extensions" -ExtensionType "DockerExtension" -TypeHandlerVersion 1.0 `
--SettingString $PublicSettings -Location $location -Verbose
-
-REQUIREMENTS: WriteToLogs module (https://www.powershellgallery.com/packages/WriteToLogs)
-LIMITATIONS	: This script does not provision each VM as a domain controller. This normally requires the addition of Desired State Configuration scripts.
-AUTHOR(S)	: Preston K. Parsard
-EDITOR(S)	: Preston K. Parsard
-KEYWORDS	: KEYWORDS: Mnemonic; [R]esilient<[R]esource Group> [N]eed<Virtual [N]etwork> [V]irtual Machines<[VMs] with [N]etworks<[N]etwork Security Groups> and [A]vailability Sets<[A]vailability Sets>
-TAGS        : 0007, Microsoft Azure, Virtual Machines, Windows Server 2016, UbuntuServer 16.04 LTS
-
-LICENSE:
-The MIT License (MIT)
-Copyright (c) 2016 Preston K. Parsard
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. 
-
-LEGAL DISCLAIMER:
-This Sample Code is provided for the purpose of illustration only and is not intended to be used in a production environment.  
-THIS SAMPLE CODE AND ANY RELATED INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, 
-INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.  
-We grant You a nonexclusive, royalty-free right to use and modify the Sample Code and to reproduce and distribute the object code form of the Sample Code, provided that You agree: 
-(i) to not use Our name, logo, or trademarks to market Your software product in which the Sample Code is embedded; 
-(ii) to include a valid copyright notice on Your software product in which the Sample Code is embedded; and 
-(iii) to indemnify, hold harmless, and defend Us and Our suppliers from and against any claims or lawsuits, including attorneys’ fees, that arise or result from the use or distribution of the Sample Code.
-This posting is provided "AS IS" with no warranties, and confers no rights.
-
-REFERENCES: 
-1. https://gallery.technet.microsoft.com/scriptcenter/Build-AD-Forest-in-Windows-3118c100
-2. http://blogs.technet.com/b/heyscriptingguy/archive/2013/06/22/weekend-scripter-getting-started-with-windows-azure-and-powershell.aspx
-3. http://michaelwasham.com/windows-azure-powershell-reference-guide/configuring-disks-endpoints-vms-powershell/
-4. http://blog.powershell.no/2010/03/04/enable-and-configure-windows-powershell-remoting-using-group-policy/
-5. http://azure.microsoft.com/blog/2014/05/13/deploying-antimalware-solutions-on-azure-virtual-machines/
-6. http://blogs.msdn.com/b/powershell/archive/2014/08/07/introducing-the-azure-powershell-dsc-desired-state-configuration-extension.aspx
-7. http://trevorsullivan.net/2014/08/21/use-powershell-dsc-to-install-dsc-resources/
-8. http://blogs.msdn.com/b/powershell/archive/2014/07/21/creating-a-secure-environment-using-powershell-desired-state-configuration.aspx
-9. http://blogs.technet.com/b/ashleymcglone/archive/2015/03/20/deploy-active-directory-with-powershell-dsc-a-k-a-dsc-promo.aspx
-10.http://blogs.technet.com/b/heyscriptingguy/archive/2013/03/26/decrypt-powershell-secure-string-password.aspx
-11.http://blogs.msdn.com/b/powershell/archive/2014/09/10/secure-credentials-in-the-azure-powershell-desired-state-configuration-dsc-extension.aspx
-12.http://blogs.technet.com/b/keithmayer/archive/2014/10/24/end-to-end-iaas-workload-provisioning-in-the-cloud-with-azure-automation-and-powershell-dsc-part-1.aspx
-13.http://blogs.technet.com/b/keithmayer/archive/2014/07/24/step-by-step-auto-provision-a-new-active-directory-domain-in-the-azure-cloud-using-the-vm-agent-custom-script-extension.aspx
-14.https://blogs.msdn.microsoft.com/cloud_solution_architect/2015/05/05/creating-azure-vms-with-arm-powershell-cmdlets/
-15.https://msdn.microsoft.com/en-us/powershell/gallery/psget/script/psget_new-scriptfileinfo
-16.https://msdn.microsoft.com/en-us/powershell/gallery/psget/script/psget_publish-script
-17.https://www.powershellgallery.com/packages/WriteToLogs
-18.https://chocolatey.org
-19.https://desktop.github.com
-20.https://www.ostechnix.com/how-to-install-windows-powershell-in-linux/
-21.https://blogs.technet.microsoft.com/heyscriptingguy/2016/10/05/part-2-install-net-core-and-powershell-on-linux-using-dsc/
-22.https://blogs.technet.microsoft.com/heyscriptingguy/2016/09/28/part-1-install-bash-on-windows-10-omi-cim-server-and-dsc-for-linux/
-23.https://docs.microsoft.com/en-us/azure/virtual-machines/linux/tutorial-manage-vm
-24.https://github.com/PowerShell/PowerShell/blob/master/docs/installation/linux.md
-25.https://www.ostechnix.com/how-to-install-windows-powershell-in-linux/
-26.https://blogs.technet.microsoft.com/heyscriptingguy/2016/09/28/part-1-install-bash-on-windows-10-omi-cim-server-and-dsc-for-linux/
-27.https://blogs.technet.microsoft.com/heyscriptingguy/2016/10/05/part-2-install-net-core-and-powershell-on-linux-using-dsc/
-28.https://blogs.msdn.microsoft.com/linuxonazure/2017/02/12/extensions-custom-script-for-linux/
-29.https://azure.microsoft.com/en-us/blog/automate-linux-vm-customization-tasks-using-customscript-extension/
-****************************************************************************************************************************************************************************************************************
+.COMPONENT
+    Azure IaaS
+.ROLE
+    Azure IaaS Windows/Linux Administrators/Engineers
+.FUNCTIONALITY
+    Deploys Azure Linux VMs with PowerShell and DSC functionality.
+.LINK
+    https://www.powershellgallery.com/packages/WriteToLogs
+.LINK
+    https://www.powershellgallery.com/packages/nx
+.LINK 
+    https://www.powershellgallery.com/packages/Posh-SSH
 #>
+
 
 <# 
 TASK ITEMS
 0001. Remove public IP on all except the fist Windows VM
-0003. Assign availability sets to both Windows and Linux machines: 
 #>
 
-# Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
-Clear-AzureProfile -Force
-Login-AzureRmAccount
+#region PRE-REQUISITE FUNCTIONS
 
-# Construct custom path for log files 
-$LogDir = "New-AzureRmAvSet"
-$LogPath = $env:HOMEPATH + "\" + $LogDir
-If (!(Test-Path $LogPath))
+function Get-PSGalleryModule
 {
- New-Item -Path $LogPath -ItemType Directory
+	[CmdletBinding(PositionalBinding = $false)]
+	Param
+	(
+		# Required modules
+		[Parameter(Mandatory = $true,
+				   HelpMessage = "Please enter the PowerShellGallery.com modules required for this script",
+				   ValueFromPipeline = $true,
+				   Position = 0)]
+		[ValidateNotNull()]
+		[ValidateNotNullOrEmpty()]
+		[string[]]$ModulesToInstall
+	) #end param
+	
+	$Repository = "PSGallery"
+	Set-PSRepository -Name $Repository -InstallationPolicy Trusted
+	Install-PackageProvider -Name Nuget -ForceBootstrap -Force	
+	foreach ($Module in $ModulesToInstall)
+	{
+		# To avoid multiple versions of a module is installed on the same system, first uninstall any previously installed and loaded versions if they exist
+		Uninstall-Module -Name $Module -AllVersions -ErrorAction SilentlyContinue -Verbose
+		
+		# If the WriteToLogs module isn't already loaded, install and import it for use later in the script for logging operations
+		If (!(Get-Module -Name $Module))
+		{
+			# https://www.powershellgallery.com/packages/WriteToLogs
+			Install-Module -Name $Module -Repository $Repository -Force -Verbose
+			Import-Module -Name $Module -Verbose
+		} #end If
+	} #end foreach
+} #end function
+
+function New-AzureRmAuthentication
+{
+    # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
+	Clear-AzureProfile -Force
+	Add-AzureRmAccount
+} #end function
+
+# Modules to add
+# https://www.powershellgallery.com/packages/WriteToLogs
+# https://www.powershellgallery.com/packages/nx
+# https://www.powershellgallery.com/packages/Posh-SSH
+# To avoid multiple versions installed on the same system, first uninstall any previously installed and loaded module versions if they exist
+
+
+# Get any PowerShellGallery.com modules required for this script.
+Get-PSGalleryModule -ModulesToInstall "WriteToLogs", "Posh-SSH", "nx"
+
+#region SCRIPT LOG SETUP
+# Set script custom log and transcript to record details of script activity.
+[string]$ScriptName = $MyInvocation.MyCommand
+$ScriptFileComponents = $ScriptName.Split(".")
+$LogDirectory = $ScriptFileComponents[0]
+
+$LogPath = $env:HOMEPATH + "\" + $LogDirectory
+If (!(Test-Path -Path $LogPath))
+{
+	New-Item -Path $LogPath -ItemType Directory
 } #End If
 
 # Create log file with a "u" formatted time-date stamp
-$StartTime = (((get-date -format u).Substring(0,16)).Replace(" ", "-")).Replace(":","")
-$time24hr = $StartTime.Substring(11,4)
+$StartTime = (((get-date -format u).Substring(0, 16)).Replace(" ", "-")).Replace(":", "")
 
-$LogFile = "New-AzureRmAvSet-LOG" + "-" + $StartTime + ".log"
-$TranscriptFile = "New-AzureRmAvSet-TRANSCRIPT" + "-" + $StartTime + ".log"
+$LogFile = "$LogDirectory-LOG" + "-" + $StartTime + ".log"
+$TranscriptFile = "$LogDirectory-TRANSCRIPT" + "-" + $StartTime + ".log"
 $Log = Join-Path -Path $LogPath -ChildPath $LogFile
-$Transcript = Join-Path $LogPath -ChildPath $TranscriptFile
+$Transcript = Join-Path  -Path $LogPath -ChildPath $TranscriptFile
 # Create Log file
 New-Item -Path $Log -ItemType File -Verbose
 # Create Transcript file
 New-Item -Path $Transcript -ItemType File -Verbose
-
-Start-Transcript -Path $Transcript -IncludeInvocationHeader -Append -Verbose
-
-# To avoid multiple versions installed on the same system, first uninstall any previously installed and loaded versions if they exist
-Uninstall-Module -Name WriteToLogs -AllVersions -ErrorAction SilentlyContinue -Verbose
-
-# If the WriteToLogs module isn't already loaded, install and import it for use later in the script for logging operations
-If (!(Get-Module -Name WriteToLogs))
-{
- # https://www.powershellgallery.com/packages/WriteToLogs
- Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
- Install-PackageProvider -Name Nuget -ForceBootstrap -Force 
- Install-Module -Name WriteToLogs -Repository PSGallery -Force -Verbose
- Import-Module -Name WriteToLogs -Verbose
-} #end If
+#endregion SCRIPT LOG SETUP
 
 #region INITIALIZE VALUES	
+
+# Authenticate to Azure.
+New-AzureRmAuthentication 
 
 $BeginTimer = Get-Date -Verbose
 
@@ -404,8 +315,8 @@ $lsVmSize = $wsVmSize
 # Availability sets
 $AvSetLsName = "AvSetLNUX"
 $AvSetWsName = "AvSetWNDS"
-$winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 3 $Region -Managed -Verbose
-$lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 3 $Region -Managed -Verbose
+$winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 $Region -Managed -Verbose
+$lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 $Region -Managed -Verbose
 $SiteNamePrefix = "net"
 $gtld = ".lab"
 
@@ -414,7 +325,7 @@ $windowsCred = Get-Credential -UserName $windowsAdminName -Message "Enter passwo
 # $wsPw = $windowsCred.GetNetworkCredential().password
 
 # Define Linux credential object using SSH public key
-Write-WithTime -Output "Creating Linux credential object..." -Log $Log
+Write-WithTime -Output "Creating the Linux credential object..." -Log $Log
 $lsSecurePassword = ConvertTo-SecureString ' ' -AsPlainText -Force
 $linuxCred = New-Object System.Management.Automation.PSCredential ($linuxAdminName, $lsSecurePassword)
 
@@ -463,9 +374,8 @@ $ObjDomain = [PSCustomObject]@{
  pLsOpenSUSE = $LnxVmNamePrefix + 3 # Based on the latest image of Linux OpenSUSE-Leap 42.2
 } #end $ObjDomain
 
-# 3 Windows VMs will be created
-$WindowsInstanceCount = 3
-$LinuxSystems = @($ObjDomain.pLsUbuntu,$ObjDomain.pLsCentOs,$ObjDomain.pLsOpenSUSE)
+# Specify the number of Windows VMs to build (max is 3 based on subnet address space)
+$WindowsInstanceCount = 0
 
 # Subnet for domain controllers
 $wsSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetWS -AddressPrefix 10.10.10.0/28 -Verbose
@@ -488,12 +398,12 @@ $nsgRuleAllowRdpIn = New-AzureRmNetworkSecurityRuleConfig -Name "AllowRdpInbound
 $nsgRuleAllowSshIn = New-AzureRmNetworkSecurityRuleConfig -Name "AllowSshInbound" -Direction Inbound -Priority 100 -Access Allow -SourceAddressPrefix "Internet" -SourcePortRange "*" `
 -DestinationAddressPrefix "VirtualNetwork" -DestinationPortRange 22 -Protocol Tcp -Verbose
 # Create the AllowWsManInound rule for the LS (Linux) subnet
-$nsgRuleAllowWsManIn = New-AzureRmNetworkSecurityRuleCongi -Name "AllowWsManInbound" -Direction Inbound -Priority 110 -Access Allow -SourceAddressPrefix "Internet" -SourcePortRange "8" `
+$nsgRuleAllowWsManIn = New-AzureRmNetworkSecurityRuleConfig -Name "AllowWsManInbound" -Direction Inbound -Priority 110 -Access Allow -SourceAddressPrefix "Internet" -SourcePortRange "8" `
 -DestinationAddressPrefix "VirtualNetwork" -DestinationPortRange 5986 -Protocol Tcp -Verbose
 
 # Apply the rules to the subnets
 $nsgWsSubnetObj = New-AzureRmNetworkSecurityGroup -Name $nsgWsSubnetName -ResourceGroupName $rg -Location $Region -SecurityRules $nsgRuleAllowRdpIn -Verbose
-$nsgLsSubnetObj = New-AzureRmNetworkSecurityGroup -Name $nsgLsSubnetName -ResourceGroupName $rg -Location $Region -SecurityRules $nsgRuleAllowSshIn, $nsgRuleAllowWManIn -Verbose
+$nsgLsSubnetObj = New-AzureRmNetworkSecurityGroup -Name $nsgLsSubnetName -ResourceGroupName $rg -Location $Region -SecurityRules $nsgRuleAllowSshIn, $nsgRuleAllowWsManIn -Verbose
 
 # Associate NSGs with VNET subnets
 Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSubNetWS -AddressPrefix $wsSubnet.AddressPrefix -NetworkSecurityGroup $nsgWsSubnetObj | Set-AzureRmVirtualNetwork -Verbose
@@ -503,7 +413,7 @@ Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSu
 [int]$wsDataDiskSize = 10
 [int]$lsDataDiskSize = $wsDataDiskSize
 
-Write-ToConsoleAndLog -Output "Since only 1 instance of a Windows and 1 instance of each Linux virtual machine distros will be provisioned [Ubuntu, CentOS, openSUSE], an avalailability set will NOT be created" -Log $Log
+# Write-ToConsoleAndLog -Output "Since only 1 instance of a Windows and 1 instance of each Linux virtual machine distros will be provisioned [Ubuntu, CentOS, openSUSE], an avalailability set will NOT be created" -Log $Log
 
 # Populate Summary Display Object
 # Add properties and values
@@ -680,18 +590,6 @@ Function Add-LinuxVm
         $offer = $imageObj.offerCentOS
         $sku = $imageObj.skuCentOS
         $version = $imageObj.versionCentOS
-
-        $cseExtensionName = 'CustomScriptForLinux'
-        $csePublisher = 'Microsoft.OSTCExtensions'
-        $cseVersion = '1.5'
-        $PublicConf = "{
-           `"fileUris`": [`"$scriptBlobUri`"],
-            `"commandToExecute`": `"sh $lnxCustomScript`"
-        }"
-        $PrivateConf = "{
-            `"storageAccountName`": `"$saName`",
-            `"storageAccountKey`": `"$storageKeyPri`"
-        }"
     } #end 2 
 
   3 {
@@ -738,16 +636,54 @@ Function Add-LinuxVm
   # Update disk configuration
   Write-WithTime -Output "Applying new disk configurations..." -Log $Log
   Update-AzureRmVM -ResourceGroupName $rg -VM $vmLs -Verbose
+  
+  Get-AzureRmAutomationDscOnboardingMetaconfig -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -OutputFolder $LogPath -Confirm:$false -Force
+  $AutoRegPath = Join-Path -Path $LogPath -ChildPath 'DscMetaConfigs'
+  $AutoRegFile = Join-Path -Path $AutoRegPath -ChildPath localhost.meta.mof
+  $AutoRegInfo = Get-Content -Path $AutoRegFile
+  $AutoRegInfo | Select-String -Pattern "ServerURL", "RegistrationKey" | Sort-Object -Unique -OutVariable autoRegPrivate
+  [string]$regKey = $autoRegPrivate[0]
+  $regKey = $regKey.Split("`"")[1]
+  [string]$regUrl = $autoRegPrivate[1]
+  $regUrl = $regUrl.Split("`"")[1]
+  Remove-Item -Path $AutoRegFile -Force
+
+  # Apply DSC for Linux extension to all Linux VMs
+  # https://github.com/Azure/azure-linux-extensions/blob/master/DSC/README.md
+  $dscPrivateConf = "{
+    `"RegistrationUrl`": `"$regUrl`",
+    `"RegistrationKey`": `"$regKey`"
+    }"
+  $dscExtensionName = 'DSCForLinux'
+  $dscPublisher = 'Microsoft.OSTCExtensions'
+  $dscVersion = '2.4'
+  $dscPublicConf = "{
+    `"ExtensionAction`": `"Register`",
+    `"NodeConfigurationName`":  `"$linuxNodeConfigName`",
+    `"RefreshFrequencyMins`": 30,
+    `"ConfigurationMode`": `"ApplyAndMonitor`"
+    }"
+    # `"FileUri`": [`"$dscMetaMofBlobUri[$i-1]`"]
+    # `"ConfigurationModeFrequencyMins`": 15,
+  Set-AzureRmVMExtension -ResourceGroupName $rg `
+  -VMName $LinuxSystem `
+  -Location $Region `
+  -Name $dscExtensionName `
+  -Publisher $dscPublisher `
+  -ExtensionType $dscExtensionName `
+  -TypeHandlerVersion $dscVersion `
+  -SettingString $dscPublicConf `
+  -ProtectedSettingString $dscPrivateConf
 
   # Apply custom script to all Linux VMs
   $cseExtensionName = 'CustomScriptForLinux'
   $csePublisher = 'Microsoft.OSTCExtensions'
   $cseVersion = '1.5'
-  $PublicConf = "{
+  $csePublicConf = "{
     `"fileUris`": [`"$scriptBlobUri`"],
     `"commandToExecute`": `"sh $lnxCustomScript`"
     }"
-  $PrivateConf = "{
+  $csePrivateConf = "{
     `"storageAccountName`": `"$saName`",
     `"storageAccountKey`": `"$storageKeyPri`"
     }"
@@ -755,7 +691,11 @@ Function Add-LinuxVm
   Set-AzureRmVMExtension -ResourceGroupName $rg -VMName $LinuxSystem -Location $Region `
   -Name $cseExtensionName -Publisher $csePublisher `
   -ExtensionType $cseExtensionName -TypeHandlerVersion $cseVersion `
-  -SettingString $PublicConf -ProtectedSettingString $PrivateConf
+  -SettingString $csePublicConf -ProtectedSettingString $csePrivateConf
+
+
+
+
  } #end If
  else
  {
@@ -830,27 +770,119 @@ else
 
  # linemark: Prompt for input?
  # Specify custom script directory, file and full local source path
- $scriptDir = "c:\data\git\0000-scripts"
- $lnxCustomScript = "Install-OmiCimServerOnLinuxAndConfigure.sh"
- $lnxCustomScriptPath = Join-Path $scriptDir -ChildPath $lnxCustomScript
+ $LogPath = $env:HOMEPATH + "\" + $LogDirectory
+If (!(Test-Path -Path $LogPath))
+{
+	New-Item -Path $LogPath -ItemType Directory
+} #end If
 
+ $ScriptDir = Join-Path -Path $LogPath -ChildPath "Scripts"
+
+ If (!(Test-Path -Path $ScriptDir))
+ {
+    New-Item -Path $ScriptDir -ItemType Directory
+ } #end if
+
+ $ModulesDir = Join-Path -Path $LogPath -ChildPath "Modules"
+
+ If (!(Test-Path -Path $ModulesDir))
+ {
+    New-Item -Path $ModulesDir -ItemType Directory
+ } #end if
+
+ $lnxCustomScript = "Install-OmiCimServerOnLinuxAndConfigure.sh"
+ $lnxDscScript = "AddLinuxFileConfig.ps1"
+ $lnxCustomScriptPath = Join-Path $scriptDir -ChildPath $lnxCustomScript
+ $dscScriptSourcePath = Join-Path $scriptDir -ChildPath $lnxDscScript
  $saContainerStaging = "staging"
- # For future DSC use
- $saContainerDSC = "windows-powershell-dsc"
+ $saContainerDSC = "powershell-dsc"
+ $autoAcct = "auto00"
+ $autoAcctRg = "rg00"
+ $linuxDscConfigName = $lnxDscScript.Split(".")[0]
+ $modulesSourceDir = "C:\Program Files\WindowsPowerShell\Modules"
+ $requiredModuleName = "nx"
+ $reqModulesSourceDir = Join-Path -Path $modulesSourceDir -ChildPath $requiredModuleName
+ $requiredModulePath = Join-Path -Path $modulesDir -ChildPath $requiredModuleName
+
+ $dscMetaConfigsDir = Join-Path -Path $scriptDir -ChildPath DscMetaConfigs
+ $dscMetaMofFiles = Get-ChildItem -Path $dscMetaConfigsDir
+ If (($dscMetaMofFiles).Count -gt 0) 
+ {
+     $dscMetaMofFiles | Remove-Item
+ } # end if
+
+ $LinuxSystems = @($ObjDomain.pLsUbuntu,$ObjDomain.pLsCentOs,$ObjDomain.pLsOpenSUSE)
+ # Define the parameters for Get-AzureRmAutomationDscOnboardingMetaconfig using PowerShell Splatting
+ $Params = @{
+    ResourceGroupName = $autoAcctRg; # The name of the ARM Resource Group that contains your Azure Automation Account
+    AutomationAccountName = $autoAcct; # The name of the Azure Automation Account where you want a node on-boarded to
+    ComputerName = $LinuxSystems; # The names of the computers that the meta configuration will be generated for
+    OutputFolder = $scriptDir;
+ } # end params
+
+# Use PowerShell splatting to pass parameters to the Azure Automation cmdlet being invoked
+# For more info about splatting, run: Get-Help -Name about_Splatting
+Get-AzureRmAutomationDscOnboardingMetaconfig @Params -Confirm:$false -Force
+$dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recurse
+ <#
+ If (Test-Path -Path $requiredModulePath)
+ {
+    Remove-Item -Path $requiredModulePath -Recurse -Confirm:$false -Force
+ } #end if
+ Copy-Item -Path $reqModulesSourceDir -Destination $modulesDir -Recurse
+ Compress-Archive -Path $requiredModulePath -DestinationPath $requiredModulePath -Update -Verbose
+ $zipModuleFile = "$requiredModuleName.zip"
+ $zipModuleName = "$requiredModulePath.zip"
+ #>
 
  # Create blob containers
  If ($saResource -ne $null)
  {
   # Create container for scripts and temporary secrets
   New-AzureStorageContainer -Name $saContainerStaging -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+  # Create container for DSC
+  New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+  # Upload Linux custom script
   Set-AzureStorageBlobContent -File $lnxCustomScriptPath -Blob $lnxCustomScript -Container $saContainerStaging -BlobType Block -Context $saResource.Context -Force -Verbose
+  # Upload DSC Mof file
+  # Set-AzureStorageBlobContent -File $mofFile -Blob $mofFileName -Container $saContainerDSC -BlobType Block -Context $saResource.Context -Force -Verbose
   # Create container for DSC artifacts
   New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
  } #end if
- 
+   # Upload metamofs
+ $dscMetaMofBlobUri = @()
+ ForEach ($mof in $dscMetaConfigsMof)
+ {
+   Set-AzureStorageBlobContent -File $mof.FullName -Blob $mof.Name -Container $saContainerDSC -BlobType Block -Context $saResource.Context -Force -Verbose
+   $dscMetaMofBlobUri += ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $mof.Name
+ } #end foreach
+   
  # Construct full path to custom script block blob
  $scriptBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerStaging + "/" + $lnxCustomScript
+ # $mofBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $mofFileName
 
+ $linuxFileConfigName = "AddLinuxFileConfig"
+ $linuxNodeConfigName = "AddLinuxFileConfig.localhost"
+
+ # New-AzureRmAutomationModule -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -Name $requiredModuleName -ContentLink $dscModuleBlobUri -Verbose
+ Import-AzureRmAutomationDscConfiguration -AutomationAccountName $autoAcct -ResourceGroupName $autoAcctRg -SourcePath $dscScriptSourcePath -Description "Simple DSC file addition example" -Published -LogVerbose $true -Force
+ <#
+ Do
+     {
+        $importStatus = Get-AzureRmAutomationModule -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -Name $requiredModuleName -Verbose
+        Start-Sleep -Seconds 3
+     } #end do
+ Until ($importStatus.ProvisioningState -eq "Succeeded")
+ #>
+
+ $CompilationJob = Start-AzureRmAutomationDscCompilationJob -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -ConfigurationName $linuxFileConfigName -Verbose
+ while($CompilationJob.EndTime –eq $null -and $CompilationJob.Exception –eq $null)           
+    {
+        $CompilationJob = $CompilationJob | Get-AzureRmAutomationDscCompilationJob
+        Start-Sleep -Seconds 3
+    } #end while
+ $CompilationJob | Get-AzureRmAutomationDscCompilationJobOutput –Stream Any 
+ 
  Write-ToConsoleAndLog -Output "Deploying environment..." -Log $Log
  For ($w = 1; $w -le $WindowsInstanceCount; $w++)
 	{
@@ -865,6 +897,23 @@ else
  {
   $i++
   Add-LinuxVM
+  <#
+  Register-AzureRmAutomationDscNode -AutomationAccountName $autoAcct `
+  -AzureVMName $LinuxSystem `
+  -ResourceGroupName $autoAcctRg `
+  -NodeConfigurationName $linuxNodeConfigName `
+  -ActionAfterReboot ContinueConfiguration `
+  -AllowModuleOverwrite $true `
+  -AzureVMResourceGroup $rg `
+  -AzureVMLocation $Region `
+  -ConfigurationMode ApplyAndAutocorrect `
+  -RebootNodeIfNeeded $true `
+  -RefreshFrequencyMins 30
+  
+  https://social.msdn.microsoft.com/Forums/azure/en-US/1e0a1a55-4b30-42b8-85ad-7e969721259b/how-do-you-configure-a-linux-vm-to-tell-azure-automation-dsc-what-its-node-configuration-is?forum=azureautomation
+  $node = Get-AzureRmAutomationDscNode -AutomationAccountName $autoAcct -Name $LinuxSystem -ResourceGroupName $autoAcctRg
+  Set-AzureRmAutomationDscNode -AutomationAccountName $autoAcct -Id $node.Id -NodeConfigurationName $linuxNodeConfigName -ResourceGroupName $autoAcctRg -Force -Verbose
+  #>
  } #end foreach
 
 } #end else
@@ -911,6 +960,14 @@ Write-WithTime -Output "END OF SCRIPT!" -Log $Log
 Stop-Transcript -Verbose
 
 #endregion FOOTER
+
+# https://blogs.technet.microsoft.com/stefan_stranger/2017/01/12/installing-linux-packages-on-an-azure-vm-using-powershell-dsc/
+# Authenticate, connect and test the results of the DSC configuration applied to the VM
+<#
+# $linuxCred = Get-Credential
+$sshSession = New-SSHSession -ComputerName "<[ip-address[es]]>" -Credential $linuxCred
+Invoke-SSHCommand -Command { sudo cat /tmp/dir/file } -SSHSession $sshSession | Select-Object -ExpandProperty Output
+#>
 
 <#
 To gracefully remove deployed resources, execute the following commands
