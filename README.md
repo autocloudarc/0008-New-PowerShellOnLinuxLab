@@ -10,8 +10,23 @@ The following VM instances will be deployed.
 3) 1x CentOS 7.3
 4) 1x openSUSE-Leap 42.2
 
-EXAMPLE
-.\New-PowerShellOnLinuxLab -WindowsInstanceCount 2
+EXAMPLE 1
+New-PowerShellOnLinuxLab.ps1 -WindowsInstanceCount 2
+
+EXAMPLE 2
+New-PowerShellOnLinuxLab.ps1 
+
+REQUIREMENTS:
+
+1. A Windows Azure subscription
+
+2. Windows OS (Windows 7/Windows Server 2008 R2 or greater)
+
+3. Windows Management Foundation (WMF 5.0 or greater installed to support PowerShell 5.0 or higher version)
+   [link](https://docs.microsoft.com/en-us/powershell/wmf/readme)
+
+4. SSH key pair to authenticate to the Linux VMs. When the script executes, a prompt will appear asking for the public key path. 
+   [link](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/ssh-from-windows)
 
 **FEEDBACK**
 Feel free to ask questions, provide feedback, contribute, file issues, etc. so we can make this even better!

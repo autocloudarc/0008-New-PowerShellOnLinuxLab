@@ -1,5 +1,6 @@
 ﻿#requires -version 5.0
 #requires -RunAsAdministrator
+#requires -Modules Azure
 <#
 DESCRIPTION	:
 This script creates the following 6 VMs, however the number of Windows VMs can be user specified with the -WindowsInstanceCount parameter with integer values from 0-3. 
@@ -26,8 +27,11 @@ This script creates the following 6 VMs, however the number of Windows VMs can b
     4) 1 x openSUSE-Leap 42.2
 .NOTES
    	CURRENT STATUS: In development
-    REQUIREMENTS: SSH key pair to authenticate to the Linux VMs. When the scrit executes, a prompt will appear asking for the public key path. 
-                  WriteToLogs module (https://www.powershellgallery.com/packages/WriteToLogs). This will be downloaded and installed automatically.
+    REQUIREMENTS: 
+    1. A Windows Azure subscription
+    2. Windows OS (Windows 7/Windows Server 2008 R2 or greater)
+    2. Windows Management Foundation (WMF 5.0 or greater installed to support PowerShell 5.0 or higher version)
+    3. SSH key pair to authenticate to the Linux VMs. When the script executes, a prompt will appear asking for the public key path. 
 
    	LIMITATIONS	: Windows VM configurations and integration as Push/Pull servers.
    	AUTHOR(S)  	: Preston K. Parsard; https://github.com/autocloudarc
@@ -64,6 +68,7 @@ This script creates the following 6 VMs, however the number of Windows VMs can b
     27.https://blogs.technet.microsoft.com/heyscriptingguy/2016/10/05/part-2-install-net-core-and-powershell-on-linux-using-dsc/
     28.https://blogs.msdn.microsoft.com/linuxonazure/2017/02/12/extensions-custom-script-for-linux/
     29.https://azure.microsoft.com/en-us/blog/automate-linux-vm-customization-tasks-using-customscript-extension/
+    30.https://docs.microsoft.com/en-us/azure/virtual-machines/linux/ssh-from-windows
 
     The MIT License (MIT)
     Copyright (c) 2017 Preston K. Parsard
@@ -137,8 +142,11 @@ function Get-PSGalleryModule
 	foreach ($Module in $ModulesToInstall)
 	{
 		# To avoid multiple versions of a module is installed on the same system, first uninstall any previously installed and loaded versions if they exist
-		Uninstall-Module -Name $Module -AllVersions -ErrorAction SilentlyContinue -Verbose
-		
+		If ($Module -notlike "Azure")
+        {
+            Uninstall-Module -Name $Module -AllVersions -Force -ErrorAction SilentlyContinue -Verbose
+		} #end
+
 		# If the WriteToLogs module isn't already loaded, install and import it for use later in the script for logging operations
 		If (!(Get-Module -Name $Module))
 		{
@@ -162,7 +170,7 @@ function New-AzureRmAuthentication
 # https://www.powershellgallery.com/packages/Posh-SSH
 
 # Get any PowerShellGallery.com modules required for this script.
-Get-PSGalleryModule -ModulesToInstall "WriteToLogs", "Posh-SSH", "nx"
+Get-PSGalleryModule -ModulesToInstall "Azure", "WriteToLogs", "Posh-SSH", "nx"
 
 #region SCRIPT LOG SETUP
 # Set script custom log and transcript to record details of script activity.
