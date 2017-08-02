@@ -25,7 +25,7 @@ REQUIREMENTS:
 3. Windows Management Foundation (WMF 5.0 or greater installed to support PowerShell 5.0 or higher version)
    [link](https://docs.microsoft.com/en-us/powershell/wmf/readme)
 
-4. SSH key pair to authenticate to the Linux VMs. When the script executes, a prompt will appear asking for the public key path. 
+4. SSH key pair to authenticate to the Linux VMs. When the script executes, a prompt will appear asking for the public key path.
    [link](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/ssh-from-windows)
 
 **FEEDBACK**
