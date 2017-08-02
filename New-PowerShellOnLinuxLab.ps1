@@ -1,6 +1,5 @@
 ﻿#requires -version 5.0
 #requires -RunAsAdministrator
-#requires -Modules Azure
 <#
 DESCRIPTION	:
 This script creates the following 6 VMs, however the number of Windows VMs can be user specified with the -WindowsInstanceCount parameter with integer values from 0-3. 
@@ -69,6 +68,7 @@ This script creates the following 6 VMs, however the number of Windows VMs can b
     28.https://blogs.msdn.microsoft.com/linuxonazure/2017/02/12/extensions-custom-script-for-linux/
     29.https://azure.microsoft.com/en-us/blog/automate-linux-vm-customization-tasks-using-customscript-extension/
     30.https://docs.microsoft.com/en-us/azure/virtual-machines/linux/ssh-from-windows
+    31.https://docs.microsoft.com/en-us/powershell/wmf/readme
 
     The MIT License (MIT)
     Copyright (c) 2017 Preston K. Parsard
