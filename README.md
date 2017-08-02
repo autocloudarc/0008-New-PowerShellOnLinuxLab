@@ -12,3 +12,6 @@ The following VM instances will be deployed.
 
 EXAMPLE
 .\New-PowerShellOnLinuxLab -WindowsInstanceCount 2
+
+**FEEDBACK**
+Feel free to ask questions, provide feedback, contribute, file issues, etc. so we can make this even better!
