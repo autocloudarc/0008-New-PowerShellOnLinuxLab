@@ -2,7 +2,7 @@
 #requires -RunAsAdministrator
 <#
 DESCRIPTION	:
-This script creates the following 6 VMs, however the number of Windows VMs is user specified from 0-3. 
+This script creates the following 6 VMs, however the number of Windows VMs is user specified from 0-4. 
 1) 3 x Windows Server 2016
 2) 1 x UbuntuServer LTS 16.04
 3) 1 x CentOS 7.3
@@ -16,11 +16,11 @@ This script creates the following 6 VMs, however the number of Windows VMs is us
     servers will be used in the lab. This project will be enhaced to eventually include those features also, but initially, the focus will be on configuring the Linux distros to support Azure Automation DSC and
     PowerShell.    
 .EXAMPLE
-   	New-PowerShellOnLinuxLab
+   	.\New-PowerShellOnLinuxLab -WindowsServerCount 2
 .PARAMETERS
     NA
 .OUTPUTS
-    1) 3 x Windows Server 2016
+    1) 0-4 x Windows Server 2016
     2) 1 x UbuntuServer LTS 16.04
     3) 1 x CentOS 7.3
     4) 1 x openSUSE-Leap 42.2
@@ -30,8 +30,8 @@ This script creates the following 6 VMs, however the number of Windows VMs is us
                   WriteToLogs module (https://www.powershellgallery.com/packages/WriteToLogs). This will be downloaded and installed automatically.
 
    	LIMITATIONS	: Windows VM configurations and integration as Push/Pull servers.
-   	AUTHOR(S)  	: Preston K. Parsard
-   	EDITOR(S)  	: Preston K. Parsard
+   	AUTHOR(S)  	: Preston K. Parsard; https://github.com/autocloudarc
+   	EDITOR(S)  	: Preston K. Parsard; https://github.com/autocloudarc
    	KEYWORDS   	: Linux, Azure, PowerShell, DSC
    
 	REFERENCES : 
@@ -91,13 +91,30 @@ This script creates the following 6 VMs, however the number of Windows VMs is us
 .FUNCTIONALITY
     Deploys Azure Linux VMs with PowerShell and DSC functionality.
 .LINK
+    https://github.com/autocloudarc/0008-New-PowerShellOnLinuxLab
     https://www.powershellgallery.com/packages/WriteToLogs
-.LINK
     https://www.powershellgallery.com/packages/nx
-.LINK 
     https://www.powershellgallery.com/packages/Posh-SSH
+    https://raw.githubusercontent.com/MSAdministrator/GetGithubRepository/master/Get-GithubRepository.ps1
+    http://technodrone.blogspot.com/2010/04/those-annoying-thing-in-powershell.html
+    https://www.ostechnix.com/how-to-install-windows-powershell-in-linux/
 #>
 
+    [CmdletBinding(HelpUri = 'https://github.com/autocloudarc/0008-New-PowerShellOnLinuxLab')]
+    Param
+    (
+        # Param1 help description
+        [Parameter(Mandatory=$true, 
+                   HelpMessage="Enter the total number of Windows Server VMs to deploy. Allowed values are 0-4 and the default is 0.",
+                   ValueFromPipeline=$true,
+                   ValueFromRemainingArguments=$false, 
+                   Position=0)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidateCount(1)]
+        [ValidateSet(0,1,2,3,4)]
+        [int]$WindowsServerCount = 0
+    ) #end param
 
 <# 
 TASK ITEMS
@@ -150,8 +167,6 @@ function New-AzureRmAuthentication
 # https://www.powershellgallery.com/packages/WriteToLogs
 # https://www.powershellgallery.com/packages/nx
 # https://www.powershellgallery.com/packages/Posh-SSH
-# To avoid multiple versions installed on the same system, first uninstall any previously installed and loaded module versions if they exist
-
 
 # Get any PowerShellGallery.com modules required for this script.
 Get-PSGalleryModule -ModulesToInstall "WriteToLogs", "Posh-SSH", "nx"
@@ -226,7 +241,7 @@ Do
 {
 	# Subscription name
 	(Get-AzureRmSubscription).SubscriptionName
-	[string]$Subscription = Read-Host "Please enter your subscription name, i.e. [MIAC | MSFT] "
+	[string]$Subscription = Read-Host "Please enter your subscription name, i.e. [MySubscriptionName] "
 	$Subscription = $Subscription.ToUpper()
 } #end Do
 Until (($Subscription) -ne $null)
@@ -236,7 +251,7 @@ Select-AzureRmSubscription -SubscriptionName $Subscription
 Do
 {
  # Resource Group name
- [string]$rg = Read-Host "Please enter a new resource group name [rg##] "
+ [string]$rg = Read-Host "Please enter a NEW resource group name. NOTE: To avoid resource conflicts and facilitate better segregation/managment do NOT use an existing resource group [rg##] "
 } #end Do
 Until (($rg) -match '^rg\d{2}$')
 
@@ -305,6 +320,20 @@ versionCentOS = $version
 versionOpenSUSE = $version
 } #end ht
 
+Do
+{
+ # Automation account resource group name
+ [string] $autoAcctRg = Read-Host -Prompt "Please enter the RESOURCE GROUP NAME containing the automation account into which the DSC configuration will be imported. "
+} #end Do
+Until (($autoAcctRg) -ne $null)
+
+Do
+{
+ # Automation account name
+ [string] $autoAcct = Read-Host -Prompt "Please enter the AUTOMATION ACCOUNT NAME into which the DSC configuration will be imported and the Linux VM nodes will be onboarded to. "
+} #end Do
+Until (($autoAcct) -ne $null -and ((Get-AzureRmResource).ResourceType | Where-Object { $_ -like 'Microsoft.Automation/automationAccounts' }))
+
 # User name is specified directly in script
 $windowsAdminName = "ent.g001.s001"
 # Make the Linux admin username the same as Windows
@@ -359,12 +388,13 @@ $sshAuthorizedKeysPath = "/home/" + $linuxAdminName + "/.ssh/authorized_keys"
 $DelimDouble = ("=" * 100 )
 $Header = "LINUX LAB DEPLOYMENT EXCERCISE: " + $StartTime
 
+$domain = "litware"
 
 # Create and populate site, subnet and VM properties of the domain with property-value pairs
 $ObjDomain = [PSCustomObject]@{
- pFQDN = "R" + $time24hr + $gtld
- pDomainName = "R" + $time24hr
- pSite = $SiteNamePrefix + $time24hr
+ pFQDN = $domain + $gtld
+ pDomainName = $domain
+ pSite = $azRegionCode
  # Subnet names matches the VM platforms (WS = Windows Server, LS = Linux Servers)
  pSubNetWS = "WS"
  pSubNetLS = "LS"
@@ -421,7 +451,6 @@ Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSu
  $SummObj = [PSCustomObject]@{
  SUBSCRIPTION = $Subscription.ToUpper()
  RESOURCEGROUP = $rg
- ATTENDEENUM = $time24hr.ToUpper()
  DOMAINFQDN = $ObjDomain.pFQDN.ToUpper()
  DOMAINNETBIOS = $ObjDomain.pDomainName.ToUpper()
  SITENAME = $ObjDomain.pSite.ToUpper()
@@ -693,9 +722,6 @@ Function Add-LinuxVm
   -ExtensionType $cseExtensionName -TypeHandlerVersion $cseVersion `
   -SettingString $csePublicConf -ProtectedSettingString $csePrivateConf
 
-
-
-
  } #end If
  else
  {
@@ -710,6 +736,112 @@ Function Add-LinuxVm
   3 { Set-AzureRmResource -Tag @{ OsVersion="$($imageObj.urnOpenSUSE)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force }
  } #end switch
 } #End function
+
+function Get-ScriptsFromGitHub
+{
+<#
+.Synopsis
+   This function will download a Github Repository without using Git
+.DESCRIPTION
+   This function will download files from Github without using Git.  You will need to know the Owner, Repository name, branch (default master),
+   and FilePath.  The Filepath will include any folders and files that you want to download.
+.EXAMPLE
+   Get-GithubRepository -Owner MSAdministrator -Repository WriteLogEntry -Verbose -LocalScriptPath 'c:\scripts" -FilePath `
+        'WriteLogEntry.psm1',
+        'WriteLogEntry.psd1',
+        'Public',
+        'en-US',
+        'en-US\about_WriteLogEntry.help.txt',
+        'Public\Write-LogEntry.ps1'
+.NOTES
+    Author: (Original) Josh Rickard; https://github.com/MSAdministrator
+    Editor: Preston K. Parsard; https://github.com/autocloudarc
+    REQUIREMENTS: 
+    1. The repository from which the script artifacts are downloaded must be public to avoid requirements authentication
+.LINK
+    https://raw.githubusercontent.com/MSAdministrator/GetGithubRepository/master/Get-GithubRepository.ps1
+#>
+    [CmdletBinding()]
+    [Alias()]
+    [OutputType([int])]
+    Param
+    (
+        # Please provide the repository owner
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$true,
+                   Position=0)]
+        [string]$Owner,
+
+        # Please provide the name of the repository
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$true,
+                   Position=1)]
+        [string]$Repository,
+
+        # Please provide a branch to download from
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$true,
+                   Position=2)]
+        [string]$Branch = 'master',
+
+        # Please provide the destination path to which the scripts will be downloaded
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$true,
+                   Position=3)]
+        [string]$LocalScriptPath,
+
+        # Please provide a list of files/paths to download
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$true,
+                   Position=4)]
+        [string[]]$FilePath
+    ) #end param
+
+    Begin
+    {
+
+        Write-WithTime -Output "Downloading and installing" -Log $Log
+
+        $wc = New-Object System.Net.WebClient
+
+        $wc.Encoding = [System.Text.Encoding]::UTF8
+    }
+    Process
+    {
+        foreach ($item in $FilePath)
+        {
+            Write-Verbose -Message "$item in FilePath"
+
+            # File download
+            if ($item -like '*.*')
+            {
+                Write-WithTime -Output "Attempting to create $LocalScriptPath\$item" -Log $Log
+
+                New-Item -ItemType File -Force -Path "$LocalScriptPath\$item" | Out-Null
+
+                $url = "https://raw.githubusercontent.com/$Owner/$Repository/$Branch/$item"
+
+                Write-WithTime -Output "Attempting to download from $url" -Log $Log 
+
+                ($wc.DownloadString("$url")) | Out-File "$LocalScriptPath\$item"
+            }
+            # Directory download
+            else
+            {
+                Write-WithTime -Output "Attempting to create $LocalScriptPath\$item" -Log $Log 
+
+                New-Item -ItemType Container -Force -Path "$LocalScriptPath\$item" | Out-Null
+
+                $url = "https://raw.githubusercontent.com/$Owner/$Repository/$Branch/$item"
+
+                Write-WithTime -Output "Attempting to download from $url" -Log $Log 
+            }
+        }
+    }
+    End
+    {
+    }
+} #end function
 
 #endregion FUNCTIONS
 
@@ -794,10 +926,20 @@ If (!(Test-Path -Path $LogPath))
  $lnxDscScript = "AddLinuxFileConfig.ps1"
  $lnxCustomScriptPath = Join-Path $scriptDir -ChildPath $lnxCustomScript
  $dscScriptSourcePath = Join-Path $scriptDir -ChildPath $lnxDscScript
+
+ $GitHubOwner = "autocloudarc"
+ $GitHubRepo = "0008-New-PowerShellOnLinuxLab"
+ 
+ Write-WithTime -Output "Checking local Linux and DSC configuration script paths..." -Log $Log 
+ If (!(Test-Path -Path $lnxCustomScriptPath) -and (!(Test-Path -Path $dscScriptSourcePath)))
+ {  
+    Write-WithTime -Output "Linux and DSC scripts were not found in the specified path. Downloading scripts from GitHub source..." -Log $Log 
+    Get-ScriptsFromGitHub -Owner $GitHubOwner -Repository $GitHubRepo -Verbose -LocalScriptPath $ScriptDir -FilePath $lnxCustomScript, $lnxDscScript
+ } #end if
+
  $saContainerStaging = "staging"
  $saContainerDSC = "powershell-dsc"
- $autoAcct = "auto00"
- $autoAcctRg = "rg00"
+
  $linuxDscConfigName = $lnxDscScript.Split(".")[0]
  $modulesSourceDir = "C:\Program Files\WindowsPowerShell\Modules"
  $requiredModuleName = "nx"
@@ -967,6 +1109,66 @@ Stop-Transcript -Verbose
 # $linuxCred = Get-Credential
 $sshSession = New-SSHSession -ComputerName "<[ip-address[es]]>" -Credential $linuxCred
 Invoke-SSHCommand -Command { sudo cat /tmp/dir/file } -SSHSession $sshSession | Select-Object -ExpandProperty Output
+#>
+
+<#
+ AZURE AUTOMATION DSC LINUX DEMO - TESTED ON: UbuntuServer LTS 16.04, CentOS 7.3 & openSUSE-Leap 42.2
+ ====================================================================================================
+ $linuxuser@AZREAUS2LNX01~$ sudo cat /tmp/dir/file
+ hello world
+ -or-
+ $linuxuser@AZREAUS2LNX01~$ powershell
+ PS /home/linuxuser> Get-Content -Path /tmp/dir/file
+ hello world
+ 
+ POWERSHELL ON LINUX DEMO - TESTED ON: UbuntuServer LTS 16.04, CentOS 7.3 & openSUSE-Leap 42.2
+ ====================================================================================================
+ Ref: https://www.ostechnix.com/how-to-install-windows-powershell-in-linux/
+
+ 0. Open powershell
+ $linuxuser@AZREAUS2LNX01~$ powershell
+
+ 1. View the PowerShell version
+ PS /home/linuxuser> $PSVersionTable
+
+ 2. Create a new file.
+ PS /home/linuxuser> New-Item -Path ./File.txt -ItemType File
+
+ 3. Append content to a file.
+ PS /home/linuxuser> Set-Content -Path ./File.txt -Value "Hello PowerShell!"
+
+ 4. Get contents of a file.
+ PS /home/linuxuser> Get-Content -Path ./File.txt
+
+ 5. Remove a file
+ PS /home/linuxuser> Remove-Item -Path ./File.txt
+
+ 6. Test file removal
+ PS /home/linuxuser> Get-Content -Path ./File.txt
+
+ 7. Get running processes
+ PS /home/linuxuser> Get-Process
+
+ 8. Get a specific process
+ PS /home/linuxuser> Get-Process -Name powershell
+
+ 9. Get aliases
+ PS /home/linuxuser> Get-Alias
+
+ 10.Get a specific alias
+ PS /home/linuxuser> Get-Alias -Name cls
+
+ 11.List all commands
+ PS /home/linuxuser> Get-Command
+
+ 12.Count all commands available on system
+ PS /home/linuxuser> (Get-Command).Count
+
+ 13. Get help for a cmdlet
+ PS /home/linuxuser> Get-Help -Name Clear-Host
+
+ 14. Exit the PowerShell console
+ PS /home/linuxuser> exit
 #>
 
 <#
