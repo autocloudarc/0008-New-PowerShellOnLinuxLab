@@ -2,7 +2,7 @@
 #requires -RunAsAdministrator
 <#
 DESCRIPTION	:
-This script creates the following 6 VMs, however the number of Windows VMs is user specified from 0-4. 
+This script creates the following 6 VMs, however the number of Windows VMs can be user specified with the -WindowsInstanceCount parameter with integer values from 0-3. 
 1) 3 x Windows Server 2016
 2) 1 x UbuntuServer LTS 16.04
 3) 1 x CentOS 7.3
@@ -16,7 +16,7 @@ This script creates the following 6 VMs, however the number of Windows VMs is us
     servers will be used in the lab. This project will be enhaced to eventually include those features also, but initially, the focus will be on configuring the Linux distros to support Azure Automation DSC and
     PowerShell.    
 .EXAMPLE
-   	.\New-PowerShellOnLinuxLab -WindowsServerCount 2
+   	.\New-PowerShellOnLinuxLab -WindowsInstanceCount 2
 .PARAMETERS
     NA
 .OUTPUTS
@@ -103,22 +103,15 @@ This script creates the following 6 VMs, however the number of Windows VMs is us
     [CmdletBinding(HelpUri = 'https://github.com/autocloudarc/0008-New-PowerShellOnLinuxLab')]
     Param
     (
-        # Param1 help description
-        [Parameter(Mandatory=$true, 
-                   HelpMessage="Enter the total number of Windows Server VMs to deploy. Allowed values are 0-4 and the default is 0.",
-                   ValueFromPipeline=$true,
+        # Specify the number of Windows VMs to build (max is 3 based on subnet address space)
+        [Parameter(ValueFromPipeline=$true,
                    ValueFromRemainingArguments=$false, 
                    Position=0)]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [ValidateCount(1)]
-        [ValidateSet(0,1,2,3,4)]
-        [int]$WindowsServerCount = 0
+        [int]$WindowsInstanceCount = 0
     ) #end param
 
 <# 
 TASK ITEMS
-0001. Remove public IP on all except the fist Windows VM
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -404,9 +397,6 @@ $ObjDomain = [PSCustomObject]@{
  pLsOpenSUSE = $LnxVmNamePrefix + 3 # Based on the latest image of Linux OpenSUSE-Leap 42.2
 } #end $ObjDomain
 
-# Specify the number of Windows VMs to build (max is 3 based on subnet address space)
-$WindowsInstanceCount = 0
-
 # Subnet for domain controllers
 $wsSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetWS -AddressPrefix 10.10.10.0/28 -Verbose
 # Subnet for member servers (AP = Application servers)
@@ -458,6 +448,7 @@ Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSu
  LSSUBNET = $ObjDomain.pSubNetLS.ToUpper()
  NSGLS = $nsgLsSubnetName.ToUpper()
  NSGWS = $nsgWsSubnetName.ToUpper()
+ WINDOWSINSTANCES = $WindowsInstanceCount
  WS01 = $ObjDomain.pWs2016prefix.ToUpper() + 1
  WS02 = $ObjDomain.pWs2016prefix.ToUpper() + 2
  WS03 = $ObjDomain.pWs2016prefix.ToUpper() + 3
@@ -1039,23 +1030,6 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
  {
   $i++
   Add-LinuxVM
-  <#
-  Register-AzureRmAutomationDscNode -AutomationAccountName $autoAcct `
-  -AzureVMName $LinuxSystem `
-  -ResourceGroupName $autoAcctRg `
-  -NodeConfigurationName $linuxNodeConfigName `
-  -ActionAfterReboot ContinueConfiguration `
-  -AllowModuleOverwrite $true `
-  -AzureVMResourceGroup $rg `
-  -AzureVMLocation $Region `
-  -ConfigurationMode ApplyAndAutocorrect `
-  -RebootNodeIfNeeded $true `
-  -RefreshFrequencyMins 30
-  
-  https://social.msdn.microsoft.com/Forums/azure/en-US/1e0a1a55-4b30-42b8-85ad-7e969721259b/how-do-you-configure-a-linux-vm-to-tell-azure-automation-dsc-what-its-node-configuration-is?forum=azureautomation
-  $node = Get-AzureRmAutomationDscNode -AutomationAccountName $autoAcct -Name $LinuxSystem -ResourceGroupName $autoAcctRg
-  Set-AzureRmAutomationDscNode -AutomationAccountName $autoAcct -Id $node.Id -NodeConfigurationName $linuxNodeConfigName -ResourceGroupName $autoAcctRg -Force -Verbose
-  #>
  } #end foreach
 
 } #end else
