@@ -321,19 +321,23 @@ versionCentOS = $version
 versionOpenSUSE = $version
 } #end ht
 
-Do
-{
- # Automation account resource group name
- [string] $autoAcctRg = Read-Host -Prompt "Please enter the RESOURCE GROUP NAME containing the automation account into which the DSC configuration will be imported. "
-} #end Do
-Until (($autoAcctRg) -ne $null)
 
-Do
+# Automation account resource group name
+[string] $autoAcctRg = Read-Host -Prompt "Please enter the RESOURCE GROUP NAME containing the automation account into which the DSC configuration will be imported. If you DO NOT already have an automation account, press [enter] to skip and a new automation account will be created in your resource group $rg. Enter new RG or press [enter] to skip "
+If ($autoAcctRg -eq $null)
 {
- # Automation account name
- [string] $autoAcct = Read-Host -Prompt "Please enter the AUTOMATION ACCOUNT NAME into which the DSC configuration will be imported and the Linux VM nodes will be onboarded to. "
-} #end Do
-Until (($autoAcct) -ne $null -and ((Get-AzureRmResource).ResourceType | Where-Object { $_ -like 'Microsoft.Automation/automationAccounts' }))
+    $autoAcctRg = $rg
+} #end if
+
+
+$NewAutomationAccount = "automation" + (Get-Random -Minimum 1000 -Maximum 9999)
+# Automation account name
+[string] $autoAcct = Read-Host -Prompt "Please enter the AUTOMATION ACCOUNT NAME into which the DSC configuration will be imported and the Linux VM nodes will be onboarded to. If you don't already have an AUTOMATION ACCOUNT, press [enter] to create a new one named $NewAutomationAccount . Enter automation account name or [enter] to create a new one "
+If ($autoAcct -eq $null)
+{
+    $autoAcct = $NewAutomationAccount
+} #end if
+
 
 # User name is specified directly in script
 $windowsAdminName = "ent.g001.s001"
