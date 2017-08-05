@@ -245,10 +245,8 @@ Do
 	[string]$Subscription = Read-Host "Please enter your subscription name, i.e. [MySubscriptionName] "
 	$Subscription = $Subscription.ToUpper()
 } #end Do
-Until (($Subscription) -ne $null)
+Until (Select-AzureRmSubscription -SubscriptionName $Subscription)
 
-# Selects subscription based on subscription name provided in response to the prompt above
-Select-AzureRmSubscription -SubscriptionName $Subscription
 Do
 {
  # Resource Group name
@@ -328,14 +326,15 @@ If ($autoAcctRg -eq $null)
     $autoAcctRg = $rg
 } #end if
 
-$NewAutomationAccount = "automation" + (Get-Random -Minimum 1000 -Maximum 9999)
-# Automation account name
-[string] $autoAcct = Read-Host -Prompt "Please enter the AUTOMATION ACCOUNT NAME into which the DSC configuration will be imported and the Linux VM nodes will be onboarded to. If you don't already have an AUTOMATION ACCOUNT, press [enter] to create a new one named $NewAutomationAccount . Enter automation account name or [enter] to create a new one "
-If ($autoAcct -eq $null)
+Do
 {
-    $autoAcct = $NewAutomationAccount
-    New-AzureRmAutomationAccount -ResourceGroupName $rg -Name $autoAcct -Location $Region -Plan Basic
-} #end if
+# Automation account name
+[string] $autoAcct = Read-Host -Prompt "Please enter the AUTOMATION ACCOUNT NAME into which the DSC configuration will be imported and the Linux VM nodes will be onboarded to. If you don't already have an AUTOMATION ACCOUNT create a new one now by specifying the name here "
+New-AzureRmAutomationAccount -ResourceGroupName $rg -Name $autoAcct -Location $Region -Plan Basic
+} #end do
+Until ($autoAcct -ne $null)
+
+Write-Debug -Message $autoAcct -Debug
 
 # User name is specified directly in script
 $windowsAdminName = "ent.g001.s001"
@@ -351,6 +350,8 @@ $winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName
 $lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 $Region -Managed -Verbose
 $SiteNamePrefix = "net"
 $gtld = ".lab"
+
+Write-ToConsoleAndLog -Output "Please create a password for your $windowsAdminName account :" -Log $Log
 
 # Prompt for Windows credentials
 $windowsCred = Get-Credential -UserName $windowsAdminName -Message "Enter password for user: $windowsAdminName"
