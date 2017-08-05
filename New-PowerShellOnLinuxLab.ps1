@@ -117,6 +117,9 @@ This script creates the following 6 VMs, however the number of Windows VMs can b
 
 <# 
 TASK ITEMS
+0001. Use DSC to build first Windows VM as a domain controller.
+0002. If the instance count for Windows VM is at least 2, use DSC to build second Windows VM as an additional domain controller.
+0003. Check lines 349 & 350 to investigate warning message: WARNING: Parameter 'Managed' is obsolete. This parameter is obsolete.  Please use Sku parameter instead.
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -320,21 +323,12 @@ versionOpenSUSE = $version
 } #end ht
 
 # Automation account resource group name
-[string] $autoAcctRg = Read-Host -Prompt "Please enter the RESOURCE GROUP NAME containing the automation account into which the DSC configuration will be imported. If you DO NOT already have an automation account, press [enter] to skip and a new automation account will be created in your resource group $rg. Enter new RG or press [enter] to skip "
-If ($autoAcctRg -eq $null)
-{
-    $autoAcctRg = $rg
-} #end if
+$autoAcctRg = $rg
 
-Do
-{
-# Automation account name
-[string] $autoAcct = Read-Host -Prompt "Please enter the AUTOMATION ACCOUNT NAME into which the DSC configuration will be imported and the Linux VM nodes will be onboarded to. If you don't already have an AUTOMATION ACCOUNT create a new one now by specifying the name here "
+$autoAcct = "AutoAccount" + (Get-Random -Minimum 1000 -Maximum 9999)
+
 New-AzureRmAutomationAccount -ResourceGroupName $rg -Name $autoAcct -Location $Region -Plan Basic
-} #end do
-Until ($autoAcct -ne $null)
 
-Write-Debug -Message $autoAcct -Debug
 
 # User name is specified directly in script
 $windowsAdminName = "ent.g001.s001"
@@ -351,7 +345,7 @@ $lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName
 $SiteNamePrefix = "net"
 $gtld = ".lab"
 
-Write-ToConsoleAndLog -Output "Please create a password for your $windowsAdminName account :" -Log $Log
+Write-ToConsoleAndLog -Output "Please create a password for your Windows VM $windowsAdminName account :" -Log $Log
 
 # Prompt for Windows credentials
 $windowsCred = Get-Credential -UserName $windowsAdminName -Message "Enter password for user: $windowsAdminName"
