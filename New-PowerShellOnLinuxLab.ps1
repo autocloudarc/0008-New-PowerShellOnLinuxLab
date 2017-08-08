@@ -120,6 +120,8 @@ TASK ITEMS
 0001. Use DSC to build first Windows VM as a domain controller.
 0002. If the instance count for Windows VM is at least 2, use DSC to build second Windows VM as an additional domain controller.
 0003. Check lines 349 & 350 to investigate warning message: WARNING: Parameter 'Managed' is obsolete. This parameter is obsolete.  Please use Sku parameter instead.
+0004. Fix missing transcript log issue.[c]
+0005. [A] Fix node config as it does not appear in the new automation account.
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -182,7 +184,7 @@ $ScriptFileComponents = $ScriptName.Split(".")
 $LogDirectory = $ScriptFileComponents[0]
 
 $LogPath = $env:HOMEPATH + "\" + $LogDirectory
-If (!(Test-Path -Path $LogPath))
+If (-not(Test-Path -Path $LogPath))
 {
 	New-Item -Path $LogPath -ItemType Directory
 } #End If
@@ -193,7 +195,7 @@ $StartTime = (((get-date -format u).Substring(0, 16)).Replace(" ", "-")).Replace
 $LogFile = "$LogDirectory-LOG" + "-" + $StartTime + ".log"
 $TranscriptFile = "$LogDirectory-TRANSCRIPT" + "-" + $StartTime + ".log"
 $Log = Join-Path -Path $LogPath -ChildPath $LogFile
-$Transcript = Join-Path  -Path $LogPath -ChildPath $TranscriptFile
+$Transcript = Join-Path -Path $LogPath -ChildPath $TranscriptFile
 # Create Log file
 New-Item -Path $Log -ItemType File -Verbose
 # Create Transcript file
@@ -328,7 +330,6 @@ $autoAcctRg = $rg
 $autoAcct = "AutoAccount" + (Get-Random -Minimum 1000 -Maximum 9999)
 
 New-AzureRmAutomationAccount -ResourceGroupName $rg -Name $autoAcct -Location $Region -Plan Basic
-
 
 # User name is specified directly in script
 $windowsAdminName = "ent.g001.s001"
@@ -626,7 +627,7 @@ Function Add-LinuxVm
  } #end Switch
 
  # If the VM doesn't aready exist, configure and create it
- If (!((Get-AzureRmVM -ResourceGroupName $rg).Name -match $LinuxSystem))
+ If (-not((Get-AzureRmVM -ResourceGroupName $rg).Name -match $LinuxSystem))
  {
   Write-WithTime -Output "VM $LinuxSystem doesn't already exist. Configuring..." -Log $Log
   
@@ -896,24 +897,17 @@ else
  $saResource = Get-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Verbose
  $storageKeyPri = (Get-AzureRmStorageAccountKey -ResourceGroupName $rg -Name $saName).Value[0]
 
- # linemark: Prompt for input?
  # Specify custom script directory, file and full local source path
- $LogPath = $env:HOMEPATH + "\" + $LogDirectory
-If (!(Test-Path -Path $LogPath))
-{
-	New-Item -Path $LogPath -ItemType Directory
-} #end If
-
  $ScriptDir = Join-Path -Path $LogPath -ChildPath "Scripts"
 
- If (!(Test-Path -Path $ScriptDir))
+ If (-not(Test-Path -Path $ScriptDir))
  {
     New-Item -Path $ScriptDir -ItemType Directory
  } #end if
 
  $ModulesDir = Join-Path -Path $LogPath -ChildPath "Modules"
 
- If (!(Test-Path -Path $ModulesDir))
+ If (-not(Test-Path -Path $ModulesDir))
  {
     New-Item -Path $ModulesDir -ItemType Directory
  } #end if
@@ -1068,17 +1062,21 @@ Do
 Until ($ResponsesObj.pOpenLogsNow -eq "Y" -OR $ResponsesObj.pOpenLogsNow -eq "YES" -OR $ResponsesObj.pOpenLogsNow -eq "N" -OR $ResponsesObj.pOpenLogsNow -eq "NO")
 
 # Exit if user does not want to continue
-if ($ResponsesObj.pOpenLogsNow -eq "Y" -OR $ResponsesObj.pOpenLogsNow -eq "YES") 
+Switch ($ResponseObj.pOpenLogsNow)
 {
- Start-Process notepad.exe $Log
- Start-Process notepad.exe $Transcript
-} #end if
-
-# End of script
-Write-WithTime -Output "END OF SCRIPT!" -Log $Log
-
-# Close transcript file
-Stop-Transcript -Verbose
+    {$_ -in 'Y','YES'} 
+        {
+            Start-Process -FilePath notepad.exe $Log 
+            Start-Process -FilePath notepad.exe $Transcript
+            Write-WithTime -Output "END OF SCRIPT!" -Log $Log
+        } #end condition
+    {$_ -in 'N','NO'} 
+        { 
+            Write-WithTime -Output "END OF SCRIPT!" -Log $Log
+            Stop-Transcript -Verbose 
+        } #end condition
+    Default { Stop-Transcript -Verbose }
+} #end switch
 
 #endregion FOOTER
 
