@@ -902,6 +902,9 @@ else
     New-Item -Path $ModulesDir -ItemType Directory
  } #end if
 
+ # TASK-ITEM: Save-Module -Name nx
+
+
  $lnxCustomScript = "Install-OmiCimServerOnLinuxAndConfigure.sh"
  $lnxDscScript = "AddLinuxFileConfig.ps1"
  $lnxCustomScriptPath = Join-Path $scriptDir -ChildPath $lnxCustomScript
@@ -923,8 +926,12 @@ else
  $linuxDscConfigName = $lnxDscScript.Split(".")[0]
  $modulesSourceDir = "C:\Program Files\WindowsPowerShell\Modules"
  $requiredModuleName = "nx"
+ $requiredModuleNameZip = "nx.zip"
  $reqModulesSourceDir = Join-Path -Path $modulesSourceDir -ChildPath $requiredModuleName
- $requiredModulePath = Join-Path -Path $modulesDir -ChildPath $requiredModuleName
+ $requiredModuleDestDir = Join-Path -Path $modulesDir -ChildPath $requiredModuleName
+ Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force
+ Compress-Archive -Path $requiredModuleDestDir -DestinationPath $requiredModuleDestDir -Update -Verbose
+ $reqModNameZipPath = Join-Path -Path $modulesDir -ChildPath $requiredModuleNameZip
 
  $dscMetaConfigsDir = Join-Path -Path $scriptDir -ChildPath DscMetaConfigs
  $dscMetaMofFiles = Get-ChildItem -Path $dscMetaConfigsDir
@@ -946,32 +953,21 @@ else
 # For more info about splatting, run: Get-Help -Name about_Splatting
 Get-AzureRmAutomationDscOnboardingMetaconfig @Params -Confirm:$false -Force
 $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recurse
- <#
- If (Test-Path -Path $requiredModulePath)
- {
-    Remove-Item -Path $requiredModulePath -Recurse -Confirm:$false -Force
- } #end if
- Copy-Item -Path $reqModulesSourceDir -Destination $modulesDir -Recurse
- Compress-Archive -Path $requiredModulePath -DestinationPath $requiredModulePath -Update -Verbose
- $zipModuleFile = "$requiredModuleName.zip"
- $zipModuleName = "$requiredModulePath.zip"
- #>
-
- # Create blob containers
+# Create blob containers
  If ($saResource -ne $null)
  {
-  # Create container for scripts and temporary secrets
-  New-AzureStorageContainer -Name $saContainerStaging -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
-  # Create container for DSC
-  New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
-  # Upload Linux custom script
-  Set-AzureStorageBlobContent -File $lnxCustomScriptPath -Blob $lnxCustomScript -Container $saContainerStaging -BlobType Block -Context $saResource.Context -Force -Verbose
-  # Upload DSC Mof file
-  # Set-AzureStorageBlobContent -File $mofFile -Blob $mofFileName -Container $saContainerDSC -BlobType Block -Context $saResource.Context -Force -Verbose
-  # Create container for DSC artifacts
-  New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+    # Create container for scripts and temporary secrets
+    New-AzureStorageContainer -Name $saContainerStaging -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+    # Create container for DSC
+    New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+    # Upload Linux custom script
+    Set-AzureStorageBlobContent -File $lnxCustomScriptPath -Blob $lnxCustomScript -Container $saContainerStaging -BlobType Block -Context $saResource.Context -Force -Verbose
+    # Upload DSC Mof file
+    Set-AzureStorageBlobContent -File $reqModNameZipPath -Blob $requiredModuleNameZip -Container $saContainerDSC -BlobType Block -Context $saResource.Context -Force -Verbose
+    # Create container for DSC artifacts
+    New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
  } #end if
-   # Upload metamofs
+ # Upload metamofs
  $dscMetaMofBlobUri = @()
  ForEach ($mof in $dscMetaConfigsMof)
  {
@@ -982,20 +978,20 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
  # Construct full path to custom script block blob
  $scriptBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerStaging + "/" + $lnxCustomScript
  # $mofBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $mofFileName
-
- $linuxFileConfigName = "AddLinuxFileConfig"
- $linuxNodeConfigName = "AddLinuxFileConfig.localhost"
-
- # New-AzureRmAutomationModule -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -Name $requiredModuleName -ContentLink $dscModuleBlobUri -Verbose
- Import-AzureRmAutomationDscConfiguration -AutomationAccountName $autoAcct -ResourceGroupName $autoAcctRg -SourcePath $dscScriptSourcePath -Description "Simple DSC file addition example" -Published -LogVerbose $true -Force
- <#
- Do
+ $moduleBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $requiredModuleNameZip
+ New-AzureRmAutomationModule -AutomationAccountName $autoAcct -Name $requiredModuleName -ContentLink $moduleBlobUri -ResourceGroupName $autoAcctRg -Verbose
+  Do
      {
         $importStatus = Get-AzureRmAutomationModule -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -Name $requiredModuleName -Verbose
         Start-Sleep -Seconds 3
      } #end do
  Until ($importStatus.ProvisioningState -eq "Succeeded")
- #>
+
+ $linuxFileConfigName = "AddLinuxFileConfig"
+ $linuxNodeConfigName = "AddLinuxFileConfig.localhost"
+ 
+ # New-AzureRmAutomationModule -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -Name $requiredModuleName -ContentLink $dscModuleBlobUri -Verbose
+ Import-AzureRmAutomationDscConfiguration -AutomationAccountName $autoAcct -ResourceGroupName $autoAcctRg -SourcePath $dscScriptSourcePath -Description "Simple DSC file addition example" -Published -LogVerbose $true -Force
 
  $CompilationJob = Start-AzureRmAutomationDscCompilationJob -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -ConfigurationName $linuxFileConfigName -Verbose
  while($CompilationJob.EndTime –eq $null -and $CompilationJob.Exception –eq $null)           
