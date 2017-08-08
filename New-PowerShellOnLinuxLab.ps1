@@ -207,6 +207,8 @@ New-Item -Path $Transcript -ItemType File -Verbose
 # Authenticate to Azure.
 New-AzureRmAuthentication 
 
+Start-Transcript -Path $Transcript -IncludeInvocationHeader
+
 $BeginTimer = Get-Date -Verbose
 
 $cspCode = "AZR"
