@@ -445,26 +445,27 @@ Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSu
 # Add properties and values
 # Make all values upper-case
  $SummObj = [PSCustomObject]@{
- SUBSCRIPTION = $Subscription.ToUpper()
- RESOURCEGROUP = $rg
- DOMAINFQDN = $ObjDomain.pFQDN.ToUpper()
- DOMAINNETBIOS = $ObjDomain.pDomainName.ToUpper()
- SITENAME = $ObjDomain.pSite.ToUpper()
- WSSUBNET = $ObjDomain.pSubNetWS.ToUpper()
- LSSUBNET = $ObjDomain.pSubNetLS.ToUpper()
- NSGLS = $nsgLsSubnetName.ToUpper()
- NSGWS = $nsgWsSubnetName.ToUpper()
- WINDOWSINSTANCES = $WindowsInstanceCount
- WS01 = $ObjDomain.pWs2016prefix.ToUpper() + 1
- WS02 = $ObjDomain.pWs2016prefix.ToUpper() + 2
- WS03 = $ObjDomain.pWs2016prefix.ToUpper() + 3
- LSUB = $ObjDomain.pLsUbuntu.ToUpper()
- LSCO = $ObjDomain.pLsCentOS.ToUpper()
- LSOS = $ObjDomain.pLsOpenSUSE.ToUpper()
- REGION = $Region.ToUpper()
- LOGPATH = $Log
+     SUBSCRIPTION = $Subscription.ToUpper()
+     RESOURCEGROUP = $rg
+     DOMAINFQDN = $ObjDomain.pFQDN.ToUpper()
+     DOMAINNETBIOS = $ObjDomain.pDomainName.ToUpper()
+     SITENAME = $ObjDomain.pSite.ToUpper()
+     WSSUBNET = $ObjDomain.pSubNetWS.ToUpper()
+     LSSUBNET = $ObjDomain.pSubNetLS.ToUpper()
+     NSGLS = $nsgLsSubnetName.ToUpper()
+     NSGWS = $nsgWsSubnetName.ToUpper()
+     WINDOWSINSTANCES = $WindowsInstanceCount
+     WS01 = $ObjDomain.pWs2016prefix.ToUpper() + 1
+     WS02 = $ObjDomain.pWs2016prefix.ToUpper() + 2
+     WS03 = $ObjDomain.pWs2016prefix.ToUpper() + 3
+     LSUB = $ObjDomain.pLsUbuntu.ToUpper()
+     LSCO = $ObjDomain.pLsCentOS.ToUpper()
+     LSOS = $ObjDomain.pLsOpenSUSE.ToUpper()
+     REGION = $Region.ToUpper()
+     LOGPATH = $Log
  } #end $SummObj
  
+$EndOfScriptMessage = "END OF SCRIPT!" 
 #endregion INITIALIZE VALUES
 
 #region FUNCTIONS	
@@ -796,48 +797,37 @@ function Get-ScriptsFromGitHub
 
     Begin
     {
-
         Write-WithTime -Output "Downloading and installing" -Log $Log
-
         $wc = New-Object System.Net.WebClient
-
         $wc.Encoding = [System.Text.Encoding]::UTF8
-    }
+    } #end begin
     Process
     {
         foreach ($item in $FilePath)
         {
             Write-Verbose -Message "$item in FilePath"
-
             # File download
             if ($item -like '*.*')
             {
                 Write-WithTime -Output "Attempting to create $LocalScriptPath\$item" -Log $Log
-
                 New-Item -ItemType File -Force -Path "$LocalScriptPath\$item" | Out-Null
-
                 $url = "https://raw.githubusercontent.com/$Owner/$Repository/$Branch/$item"
-
                 Write-WithTime -Output "Attempting to download from $url" -Log $Log 
-
                 ($wc.DownloadString("$url")) | Out-File "$LocalScriptPath\$item"
-            }
+            } #end if
             # Directory download
             else
             {
                 Write-WithTime -Output "Attempting to create $LocalScriptPath\$item" -Log $Log 
-
                 New-Item -ItemType Container -Force -Path "$LocalScriptPath\$item" | Out-Null
-
                 $url = "https://raw.githubusercontent.com/$Owner/$Repository/$Branch/$item"
-
                 Write-WithTime -Output "Attempting to download from $url" -Log $Log 
-            }
-        }
-    }
+            } #end else
+        } #end foreach
+    } #end process
     End
     {
-    }
+    } #end end
 } #end function
 
 #endregion FUNCTIONS
@@ -1068,11 +1058,11 @@ Switch ($ResponseObj.pOpenLogsNow)
         {
             Start-Process -FilePath notepad.exe $Log 
             Start-Process -FilePath notepad.exe $Transcript
-            Write-WithTime -Output "END OF SCRIPT!" -Log $Log
+            Write-WithTime -Output $EndOfScriptMessage -Log $Log
         } #end condition
     {$_ -in 'N','NO'} 
         { 
-            Write-WithTime -Output "END OF SCRIPT!" -Log $Log
+            Write-WithTime -Output $EndOfScriptMessage -Log $Log
             Stop-Transcript -Verbose 
         } #end condition
     Default { Stop-Transcript -Verbose }
