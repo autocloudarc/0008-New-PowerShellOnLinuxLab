@@ -122,6 +122,7 @@ TASK ITEMS
 0003. Check lines 349 & 350 to investigate warning message: WARNING: Parameter 'Managed' is obsolete. This parameter is obsolete.  Please use Sku parameter instead.
 0004. Fix missing transcript log issue.[c]
 0005. [A] Fix node config as it does not appear in the new automation account.
+0006. Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -931,7 +932,7 @@ else
  $requiredModuleNameZip = "nx.zip"
  $reqModulesSourceDir = Join-Path -Path $modulesSourceDir -ChildPath $requiredModuleName
  $requiredModuleDestDir = Join-Path -Path $modulesDir -ChildPath $requiredModuleName
- Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force
+ Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
  Compress-Archive -Path $requiredModuleDestDir -DestinationPath $requiredModuleDestDir -Update -Verbose
  $reqModNameZipPath = Join-Path -Path $modulesDir -ChildPath $requiredModuleNameZip
 
