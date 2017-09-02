@@ -123,6 +123,7 @@ TASK ITEMS
 0004. Fix missing transcript log issue.[c]
 0005. [A] Fix node config as it does not appear in the new automation account.
 0006. Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
+0007. If modules downloaded earlier in this script have previously been moved to the staging location $ModulesDir before being uploaded to Azure Automation, remove them since they may have been an older version.
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -932,6 +933,12 @@ else
  $requiredModuleNameZip = "nx.zip"
  $reqModulesSourceDir = Join-Path -Path $modulesSourceDir -ChildPath $requiredModuleName
  $requiredModuleDestDir = Join-Path -Path $modulesDir -ChildPath $requiredModuleName
+ $ModulesDirItems = (Get-ChildItem -Path $ModulesDir).Name
+ # If modules downloaded earlier in this script have previously been moved to the staging location $ModulesDir before being uploaded to Azure Automation, remove them since they may have been an older version.
+ If ($ModulesDirItems -gt 0)
+ {
+    Remove-Item -Path $ModulesDir -Recurse -Force
+ } #end if  
  Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
  Compress-Archive -Path $requiredModuleDestDir -DestinationPath $requiredModuleDestDir -Update -Verbose
  $reqModNameZipPath = Join-Path -Path $modulesDir -ChildPath $requiredModuleNameZip
