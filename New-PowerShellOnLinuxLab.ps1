@@ -124,6 +124,8 @@ TASK ITEMS
 0005. [A] Fix node config as it does not appear in the new automation account.
 0006. Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
 0007. If modules downloaded earlier in this script have previously been moved to the staging location $ModulesDir before being uploaded to Azure Automation, remove them since they may have been an older version.
+0008. Updated Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each. 
+0009. Rollback commit 794cf324371b5e9487ed315dbf8f7b103b0b4295 due to error: Compress-Archive : The path '\Users\prestopa\New-PowerShellOnLinuxLab\Modules\nx' either does not exist or is not a valid file system path.
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -739,94 +741,82 @@ Function Add-LinuxVm
  } #end switch
 } #End function
 
-function Get-ScriptsFromGitHub
+function Get-GitHubRepositoryFiles
 {
 <#
 .Synopsis
-   This function will download a Github Repository without using Git
+   Download selected files from a Github repository to a local directory or share
 .DESCRIPTION
-   This function will download files from Github without using Git.  You will need to know the Owner, Repository name, branch (default master),
-   and FilePath.  The Filepath will include any folders and files that you want to download.
+   This function downloads a specified set of files from a Github repository to a local drive or share, which can include a *.zipped file
 .EXAMPLE
-   Get-GithubRepository -Owner MSAdministrator -Repository WriteLogEntry -Verbose -LocalScriptPath 'c:\scripts" -FilePath `
-        'WriteLogEntry.psm1',
-        'WriteLogEntry.psd1',
-        'Public',
-        'en-US',
-        'en-US\about_WriteLogEntry.help.txt',
-        'Public\Write-LogEntry.ps1'
+   Get-GithubRepositoryFiles -Owner <Owner> -Repository <Repository> -Branch <Branch> -Files <Files[]> -DownloadTargetDirectory <DownloadTargetDirectory>
 .NOTES
-    Author: (Original) Josh Rickard; https://github.com/MSAdministrator
-    Editor: Preston K. Parsard; https://github.com/autocloudarc
+    Author: Preston K. Parsard; https://github.com/autocloudarc
+    Ispired by: Josh Rickard; 
+        1. https://github.com/MSAdministrator
+        2. https://raw.githubusercontent.com/MSAdministrator/GetGithubRepository
     REQUIREMENTS: 
     1. The repository from which the script artifacts are downloaded must be public to avoid requirements authentication
 .LINK
-    https://raw.githubusercontent.com/MSAdministrator/GetGithubRepository/master/Get-GithubRepository.ps1
+    http://windowsitpro.com/powershell/use-net-webclient-class-powershell-scripts-access-web-data
+    http://windowsitpro.com/site-files/windowsitpro.com/files/archive/windowsitpro.com/content/content/99043/listing_03.txt
 #>
     [CmdletBinding()]
-    [Alias()]
-    [OutputType([int])]
     Param
     (
         # Please provide the repository owner
         [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
                    Position=0)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
         [string]$Owner,
 
         # Please provide the name of the repository
         [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
                    Position=1)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
         [string]$Repository,
 
         # Please provide a branch to download from
         [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$true,
                    Position=2)]
-        [string]$Branch = 'master',
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [string]$Branch,
 
-        # Please provide the destination path to which the scripts will be downloaded
+        # Please provide the list of files to download
         [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
                    Position=3)]
-        [string]$LocalScriptPath,
-
-        # Please provide a list of files/paths to download
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$Files,
+        
+        
+        # Please provide a local target path for the GitHub files and folders
         [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   Position=4)]
-        [string[]]$FilePath
+                   Position=4,
+                   HelpMessage = "Please provide a local target directory for the GitHub files and folders")]
+        [string]$DownloadTargetDirectory
     ) #end param
 
     Begin
     {
-        Write-WithTime -Output "Downloading and installing" -Log $Log
+        # Write-WithTime -Output "Downloading and installing" -Log $Log
+        Write-Output "Downloading and installing" 
         $wc = New-Object System.Net.WebClient
-        $wc.Encoding = [System.Text.Encoding]::UTF8
+        $RawGitHubUriPrefix = "https://raw.githubusercontent.com"
     } #end begin
     Process
     {
-        foreach ($item in $FilePath)
+        foreach ($File in $Files)
         {
-            Write-Verbose -Message "$item in FilePath"
+            Write-WithTime -Output "Processing $File..." -Log $Log
             # File download
-            if ($item -like '*.*')
-            {
-                Write-WithTime -Output "Attempting to create $LocalScriptPath\$item" -Log $Log
-                New-Item -ItemType File -Force -Path "$LocalScriptPath\$item" | Out-Null
-                $url = "https://raw.githubusercontent.com/$Owner/$Repository/$Branch/$item"
-                Write-WithTime -Output "Attempting to download from $url" -Log $Log 
-                ($wc.DownloadString("$url")) | Out-File "$LocalScriptPath\$item"
-            } #end if
-            # Directory download
-            else
-            {
-                Write-WithTime -Output "Attempting to create $LocalScriptPath\$item" -Log $Log 
-                New-Item -ItemType Container -Force -Path "$LocalScriptPath\$item" | Out-Null
-                $url = "https://raw.githubusercontent.com/$Owner/$Repository/$Branch/$item"
-                Write-WithTime -Output "Attempting to download from $url" -Log $Log 
-            } #end else
+            $uri = $RawGitHubUriPrefix, $Owner, $Repository, $Branch, $File -Join "/"
+            Write-WithTime -Output "Attempting to download from $uri" -Log $Log 
+            $DownloadTargetPath = Join-Path -Path $DownloadTargetDirectory -ChildPath $File 
+            $wc.DownloadFile($uri, $DownloadTargetPath)
         } #end foreach
     } #end process
     End
@@ -907,21 +897,22 @@ else
  } #end if
 
  # TASK-ITEM: Save-Module -Name nx
-
-
+ 
  $lnxCustomScript = "Install-OmiCimServerOnLinuxAndConfigure.sh"
  $lnxDscScript = "AddLinuxFileConfig.ps1"
  $lnxCustomScriptPath = Join-Path $scriptDir -ChildPath $lnxCustomScript
  $dscScriptSourcePath = Join-Path $scriptDir -ChildPath $lnxDscScript
-
- $GitHubOwner = "autocloudarc"
- $GitHubRepo = "0008-New-PowerShellOnLinuxLab"
+ [string[]]$FilesToDownload = $lnxCustomScript, $lnxDscScript
  
+ $Owner = "autocloudarc"
+ $Repository = "0008-New-PowerShellOnLinuxLab"
+ $Branch = "master"
+
  Write-WithTime -Output "Checking local Linux and DSC configuration script paths..." -Log $Log 
  If (!(Test-Path -Path $lnxCustomScriptPath) -and (!(Test-Path -Path $dscScriptSourcePath)))
  {  
     Write-WithTime -Output "Linux and DSC scripts were not found in the specified path. Downloading scripts from GitHub source..." -Log $Log 
-    Get-ScriptsFromGitHub -Owner $GitHubOwner -Repository $GitHubRepo -Verbose -LocalScriptPath $ScriptDir -FilePath $lnxCustomScript, $lnxDscScript
+    Get-GitHubRepositoryFiles -Owner $Owner -Repository $Repository -Branch $Branch -Files $FilestToDownload -DownloadTargetDirectory $ScriptDir
  } #end if
 
  $saContainerStaging = "staging"
@@ -933,12 +924,7 @@ else
  $requiredModuleNameZip = "nx.zip"
  $reqModulesSourceDir = Join-Path -Path $modulesSourceDir -ChildPath $requiredModuleName
  $requiredModuleDestDir = Join-Path -Path $modulesDir -ChildPath $requiredModuleName
- $ModulesDirItems = (Get-ChildItem -Path $ModulesDir).Name
- # If modules downloaded earlier in this script have previously been moved to the staging location $ModulesDir before being uploaded to Azure Automation, remove them since they may have been an older version.
- If ($ModulesDirItems -gt 0)
- {
-    Remove-Item -Path $ModulesDir -Recurse -Force
- } #end if  
+
  Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
  Compress-Archive -Path $requiredModuleDestDir -DestinationPath $requiredModuleDestDir -Update -Verbose
  $reqModNameZipPath = Join-Path -Path $modulesDir -ChildPath $requiredModuleNameZip
