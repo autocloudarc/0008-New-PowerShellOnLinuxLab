@@ -124,8 +124,8 @@ TASK ITEMS
 0005. [A] Fix node config as it does not appear in the new automation account.
 0006. Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
 0007. If modules downloaded earlier in this script have previously been moved to the staging location $ModulesDir before being uploaded to Azure Automation, remove them since they may have been an older version.
-0008. Updated Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each. 
-0009. Rollback commit 794cf324371b5e9487ed315dbf8f7b103b0b4295 due to error: Compress-Archive : The path '\Users\prestopa\New-PowerShellOnLinuxLab\Modules\nx' either does not exist or is not a valid file system path.
+0008. Update Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each. 
+0009. [fixed]Rollback commit 794cf324371b5e9487ed315dbf8f7b103b0b4295 due to error: Compress-Archive : The path '\Users\prestopa\New-PowerShellOnLinuxLab\Modules\nx' either does not exist or is not a valid file system path.
 0010. Fix log and transcript files to automatically open at end of script after prompt.
 #>
 
@@ -1045,21 +1045,19 @@ Do
 Until ($ResponsesObj.pOpenLogsNow -eq "Y" -OR $ResponsesObj.pOpenLogsNow -eq "YES" -OR $ResponsesObj.pOpenLogsNow -eq "N" -OR $ResponsesObj.pOpenLogsNow -eq "NO")
 
 # Exit if user does not want to continue
-Switch ($ResponseObj.pOpenLogsNow)
+If ($ResponsesObj.pOpenLogsNow -in 'Y','YES') 
 {
-    {$_ -in 'Y','YES'} 
-        {
-            Start-Process -FilePath notepad.exe $Log 
-            Start-Process -FilePath notepad.exe $Transcript
-            Write-WithTime -Output $EndOfScriptMessage -Log $Log
-        } #end condition
-    {$_ -in 'N','NO'} 
-        { 
-            Write-WithTime -Output $EndOfScriptMessage -Log $Log
-            Stop-Transcript -Verbose 
-        } #end condition
-    Default { Stop-Transcript -Verbose }
-} #end switch
+    Start-Process -FilePath notepad.exe $Log 
+    Start-Process -FilePath notepad.exe $Transcript
+    Write-WithTime -Output $EndOfScriptMessage -Log $Log
+} #end condition
+ElseIf ($ResponsesObj.pOpenLogsNow -in 'N','NO') 
+{ 
+    Write-WithTime -Output $EndOfScriptMessage -Log $Log
+    Stop-Transcript -Verbose 
+} #end condition
+
+Stop-Transcript -Verbose
 
 #endregion FOOTER
 
