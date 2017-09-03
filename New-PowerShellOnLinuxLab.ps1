@@ -1,13 +1,6 @@
 ﻿#requires -version 5.0
 #requires -RunAsAdministrator
 <#
-DESCRIPTION	:
-This script creates the following 6 VMs, however the number of Windows VMs can be user specified with the -WindowsInstanceCount parameter with integer values from 0-3. 
-1) 3 x Windows Server 2016
-2) 1 x UbuntuServer LTS 16.04
-3) 1 x CentOS 7.3
-4) 1 x openSUSE-Leap 42.2
-
 .SYNOPSIS
    	Creates up to 6 VMs for an Azure Linux Windows PowerShell Lab consisting of 0-3 Windows VMs, and 3 Linux VMs (Ubuntu, CentOS and openSUSE). 
 .DESCRIPTION
@@ -15,6 +8,12 @@ This script creates the following 6 VMs, however the number of Windows VMs can b
     however the number of Windows VMs is user specified from 0-3, since the deployment of Windows VMs are not essential for a basic demonstration of PowerShell on Linux, but will be required if Windows Push or Pull 
     servers will be used in the lab. This project will be enhaced to eventually include those features also, but initially, the focus will be on configuring the Linux distros to support Azure Automation DSC and
     PowerShell.    
+    The VM resources deployed are:
+    1) 3 x Windows Server 2016
+2) 1 x UbuntuServer LTS 16.04
+3) 1 x CentOS 7.3
+4) 1 x openSUSE-Leap 42.2
+
 .EXAMPLE
    	.\New-PowerShellOnLinuxLab -WindowsInstanceCount 2
 .PARAMETERS
