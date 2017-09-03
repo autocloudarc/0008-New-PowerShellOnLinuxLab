@@ -128,6 +128,7 @@ TASK ITEMS
 0009. [fixed]Rollback commit 794cf324371b5e9487ed315dbf8f7b103b0b4295 due to error: Compress-Archive : The path '\Users\prestopa\New-PowerShellOnLinuxLab\Modules\nx' either does not exist or is not a valid file system path.
 0010. [fixed]Fix log and transcript files to automatically open at end of script after prompt.
 0011. Update region codes list.
+0012. Remove redundant line:     New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -958,14 +959,12 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
  {
     # Create container for scripts and temporary secrets
     New-AzureStorageContainer -Name $saContainerStaging -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
-    # Create container for DSC
+    # Create container for DSC and artifacts
     New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
     # Upload Linux custom script
     Set-AzureStorageBlobContent -File $lnxCustomScriptPath -Blob $lnxCustomScript -Container $saContainerStaging -BlobType Block -Context $saResource.Context -Force -Verbose
     # Upload DSC Mof file
     Set-AzureStorageBlobContent -File $reqModNameZipPath -Blob $requiredModuleNameZip -Container $saContainerDSC -BlobType Block -Context $saResource.Context -Force -Verbose
-    # Create container for DSC artifacts
-    New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
  } #end if
  # Upload metamofs
  $dscMetaMofBlobUri = @()
