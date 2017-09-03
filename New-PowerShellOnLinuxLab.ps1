@@ -2,10 +2,10 @@
 #requires -RunAsAdministrator
 <#
 .SYNOPSIS
-   	Creates up to 6 VMs for an Azure Linux Windows PowerShell Lab consisting of 0-3 Windows VMs, and 3 Linux VMs (Ubuntu, CentOS and openSUSE). 
+   	Creates up to 6 VMs for an Azure Linux Windows PowerShell Lab consisting of 1-3 Windows VMs, and 3 Linux VMs (Ubuntu, CentOS and openSUSE). 
 .DESCRIPTION
 	This script will create a set of Azure VMs to demonstrate Windows PowerShell and Azure Automation DSC functionality on Linux VMs. The set of VMs that will be created are listed below in the .OUTPUTS help tag. 
-    however the number of Windows VMs is user specified from 0-3, since the deployment of Windows VMs are not essential for a basic demonstration of PowerShell on Linux, but will be required if Windows Push or Pull 
+    however the number of Windows VMs is user specified from 1-3, since the deployment of Windows VMs are not essential for a basic demonstration of PowerShell on Linux, but will be required if Windows Push or Pull 
     servers will be used in the lab. This project will be enhaced to eventually include those features also, but initially, the focus will be on configuring the Linux distros to support Azure Automation DSC and
     PowerShell.    
     The VM resources deployed are:
@@ -17,14 +17,14 @@
 .EXAMPLE
    	.\New-PowerShellOnLinuxLab -WindowsInstanceCount 2
 .PARAMETERS
-    NA
+    WindowsInstanceCount: The number of Windows Server 2016 Datacenter VMs that will be deployed.
 .OUTPUTS
-    1) 0-4 x Windows Server 2016
+    1) 1-4 x Windows Server 2016
     2) 1 x UbuntuServer LTS 16.04
     3) 1 x CentOS 7.3
     4) 1 x openSUSE-Leap 42.2
 .NOTES
-   	CURRENT STATUS: In development
+   	CURRENT STATUS: Released
     REQUIREMENTS: 
     1. A Windows Azure subscription
     2. Windows OS (Windows 7/Windows Server 2008 R2 or greater)
@@ -107,25 +107,27 @@
     [CmdletBinding(HelpUri = 'https://github.com/autocloudarc/0008-New-PowerShellOnLinuxLab')]
     Param
     (
-        # Specify the number of Windows VMs to build (max is 3 based on subnet address space)
+        # Specify the number of Windows VMs to build (default is 1, max is 3 based on subnet address space)
         [Parameter(ValueFromPipeline=$true,
+                   HelpMessage = "Specify the number of Windows VMs to build (default is 1, max is 3 based on subnet address space).",
                    ValueFromRemainingArguments=$false, 
                    Position=0)]
-        [int]$WindowsInstanceCount = 0
+        [int]$WindowsInstanceCount = 1
     ) #end param
 
 <# 
 TASK ITEMS
-0001. Use DSC to build first Windows VM as a domain controller.
-0002. If the instance count for Windows VM is at least 2, use DSC to build second Windows VM as an additional domain controller.
-0003. Check lines 349 & 350 to investigate warning message: WARNING: Parameter 'Managed' is obsolete. This parameter is obsolete.  Please use Sku parameter instead.
-0004. Fix missing transcript log issue.[c]
-0005. [A] Fix node config as it does not appear in the new automation account.
-0006. Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
-0007. If modules downloaded earlier in this script have previously been moved to the staging location $ModulesDir before being uploaded to Azure Automation, remove them since they may have been an older version.
-0008. Update Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each. 
+0001. [pending]Use DSC to build first Windows VM as a domain controller.
+0002. [pending]If the instance count for Windows VM is at least 2, use DSC to build second Windows VM as an additional domain controller.
+0003. [pending]Check lines 349 & 350 to investigate warning message: WARNING: Parameter 'Managed' is obsolete. This parameter is obsolete.  Please use Sku parameter instead.
+0004. [done]Fix missing transcript log issue.[c]
+0005. [done] Fix node config as it does not appear in the new automation account.
+0006. [done]Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
+0007. [done][reverted]If modules downloaded earlier in this script have previously been moved to the staging location $ModulesDir before being uploaded to Azure Automation, remove them since they may have been an older version.
+0008. [done]Update Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each. 
 0009. [fixed]Rollback commit 794cf324371b5e9487ed315dbf8f7b103b0b4295 due to error: Compress-Archive : The path '\Users\prestopa\New-PowerShellOnLinuxLab\Modules\nx' either does not exist or is not a valid file system path.
-0010. Fix log and transcript files to automatically open at end of script after prompt.
+0010. [fixed]Fix log and transcript files to automatically open at end of script after prompt.
+0011. Update region codes list.
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -180,6 +182,8 @@ function New-AzureRmAuthentication
 
 # Get any PowerShellGallery.com modules required for this script.
 Get-PSGalleryModule -ModulesToInstall "Azure", "WriteToLogs", "Posh-SSH", "nx"
+
+#endregion PREREQUISITE FUNCTIONS
 
 #region SCRIPT LOG SETUP
 # Set script custom log and transcript to record details of script activity.
@@ -364,7 +368,7 @@ $lsSecurePassword = ConvertTo-SecureString ' ' -AsPlainText -Force
 $linuxCred = New-Object System.Management.Automation.PSCredential ($linuxAdminName, $lsSecurePassword)
 
 # An SSH public key must have first been created
-Write-WithTime -Output "A public ssh rsa key is required for SSH authentication to the Linux VM. Please create an ssh key pair now if required..." -Log $Log
+Write-WithTime -Output "A public ssh rsa key is required for SSH authentication to the Linux VM. The Linux username for all Linux VMs is $LinuxAdminName. Please create an ssh key pair now if required..." -Log $Log
 Do
 {
  [string]$sshPublicKeyPath = Read-Host "Please enter the full path to the SSH Putty public key that will be used to authenticate to the Linux VM [ c:\<path>\<PublicKeyFile> ] "
@@ -409,9 +413,9 @@ $ObjDomain = [PSCustomObject]@{
  pLsOpenSUSE = $LnxVmNamePrefix + 3 # Based on the latest image of Linux OpenSUSE-Leap 42.2
 } #end $ObjDomain
 
-# Subnet for domain controllers
+# Subnet for Windows servers (WS)
 $wsSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetWS -AddressPrefix 10.10.10.0/28 -Verbose
-# Subnet for member servers (AP = Application servers)
+# Subnet for Linux servers (LS)
 $lsSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetLS -AddressPrefix 10.10.10.16/28 -Verbose
 
 $Vnet = New-AzureRmVirtualNetwork -Name $ObjDomain.pSite -ResourceGroupName $rg -Location $Region -AddressPrefix 10.10.10.0/26 -Subnet $wsSubnet,$lsSubnet -Verbose
