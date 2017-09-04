@@ -117,18 +117,19 @@
 
 <# 
 TASK ITEMS
-0001. [pending]Use DSC to build first Windows VM as a domain controller.
-0002. [pending]If the instance count for Windows VM is at least 2, use DSC to build second Windows VM as an additional domain controller.
-0003. [pending]Check lines 349 & 350 to investigate warning message: WARNING: Parameter 'Managed' is obsolete. This parameter is obsolete.  Please use Sku parameter instead.
-0004. [done]Fix missing transcript log issue.[c]
+0001. [pending] Use DSC to build first Windows VM as a domain controller.
+0002. [pending] If the instance count for Windows VM is at least 2, use DSC to build second Windows VM as an additional domain controller.
+0003. [pending] Check lines 349 & 350 to investigate warning message: WARNING: Parameter 'Managed' is obsolete. This parameter is obsolete.  Please use Sku parameter instead.
+0004. [done] Fix missing transcript log issue.[c]
 0005. [done] Fix node config as it does not appear in the new automation account.
-0006. [done]Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
+0006. [done] Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
 0007. [done][reverted]If modules downloaded earlier in this script have previously been moved to the staging location $ModulesDir before being uploaded to Azure Automation, remove them since they may have been an older version.
-0008. [done]Update Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each. 
-0009. [fixed]Rollback commit 794cf324371b5e9487ed315dbf8f7b103b0b4295 due to error: Compress-Archive : The path '\Users\prestopa\New-PowerShellOnLinuxLab\Modules\nx' either does not exist or is not a valid file system path.
-0010. [fixed]Fix log and transcript files to automatically open at end of script after prompt.
-0011. Update region codes list.
-0012. Remove redundant line:     New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+0008. [done] Update Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each. 
+0009. [fixed] Rollback commit 794cf324371b5e9487ed315dbf8f7b103b0b4295 due to error: Compress-Archive : The path '\Users\prestopa\New-PowerShellOnLinuxLab\Modules\nx' either does not exist or is not a valid file system path.
+0010. [fixed] Fix log and transcript files to automatically open at end of script after prompt.
+0011. [pending] Update region codes list.
+0012. [done] Remove redundant line: New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+0013. [pending] Add comment tags for numeric indices on diagram
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -181,6 +182,7 @@ function New-AzureRmAuthentication
 # https://www.powershellgallery.com/packages/nx
 # https://www.powershellgallery.com/packages/Posh-SSH
 
+# index 01
 # Get any PowerShellGallery.com modules required for this script.
 Get-PSGalleryModule -ModulesToInstall "Azure", "WriteToLogs", "Posh-SSH", "nx"
 
@@ -205,14 +207,17 @@ $LogFile = "$LogDirectory-LOG" + "-" + $StartTime + ".log"
 $TranscriptFile = "$LogDirectory-TRANSCRIPT" + "-" + $StartTime + ".log"
 $Log = Join-Path -Path $LogPath -ChildPath $LogFile
 $Transcript = Join-Path -Path $LogPath -ChildPath $TranscriptFile
+# index 02
 # Create Log file
 New-Item -Path $Log -ItemType File -Verbose
+# index 03
 # Create Transcript file
 New-Item -Path $Transcript -ItemType File -Verbose
 #endregion SCRIPT LOG SETUP
 
 #region INITIALIZE VALUES	
 
+# index 04
 # Authenticate to Azure.
 New-AzureRmAuthentication 
 
@@ -256,7 +261,8 @@ $seriesPrefix = "0"
 
 Do
 {
-	# Subscription name
+	# idnex 05
+    # Subscription name
 	(Get-AzureRmSubscription).SubscriptionName
 	[string]$Subscription = Read-Host "Please enter your subscription name, i.e. [MySubscriptionName] "
 	$Subscription = $Subscription.ToUpper()
@@ -265,6 +271,7 @@ Until (Select-AzureRmSubscription -SubscriptionName $Subscription)
 
 Do
 {
+ # index 06
  # Resource Group name
  [string]$rg = Read-Host "Please enter a NEW resource group name. NOTE: To avoid resource conflicts and facilitate better segregation/managment do NOT use an existing resource group [rg##] "
 } #end Do
@@ -286,6 +293,7 @@ $ResponsesObj = [PSCustomObject]@{
 
 Do
 {
+ # index 07
  # The location refers to a geographic region of an Azure data center
  $Regions = Get-AzureRmLocation | Select-Object -ExpandProperty Location
  Write-ToConsoleAndLog -Output "The list of available regions are :" -Log $Log
@@ -337,7 +345,7 @@ versionOpenSUSE = $version
 
 # Automation account resource group name
 $autoAcctRg = $rg
-
+# index 08
 $autoAcct = "AutoAccount" + (Get-Random -Minimum 1000 -Maximum 9999)
 
 New-AzureRmAutomationAccount -ResourceGroupName $rg -Name $autoAcct -Location $Region -Plan Basic
@@ -352,13 +360,16 @@ $lsVmSize = $wsVmSize
 # Availability sets
 $AvSetLsName = "AvSetLNUX"
 $AvSetWsName = "AvSetWNDS"
+# index 09
 $winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 $Region -Managed -Verbose
+# index 10
 $lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 $Region -Managed -Verbose
 $SiteNamePrefix = "net"
 $gtld = ".lab"
 
 Write-ToConsoleAndLog -Output "Please create a password for your Windows VM $windowsAdminName account :" -Log $Log
 
+# index 11
 # Prompt for Windows credentials
 $windowsCred = Get-Credential -UserName $windowsAdminName -Message "Enter password for user: $windowsAdminName"
 # $wsPw = $windowsCred.GetNetworkCredential().password
@@ -368,6 +379,7 @@ Write-WithTime -Output "Creating the Linux credential object..." -Log $Log
 $lsSecurePassword = ConvertTo-SecureString ' ' -AsPlainText -Force
 $linuxCred = New-Object System.Management.Automation.PSCredential ($linuxAdminName, $lsSecurePassword)
 
+# index 13
 # An SSH public key must have first been created
 Write-WithTime -Output "A public ssh rsa key is required for SSH authentication to the Linux VM. The Linux username for all Linux VMs is $LinuxAdminName. Please create an ssh key pair now if required..." -Log $Log
 Do
@@ -414,11 +426,14 @@ $ObjDomain = [PSCustomObject]@{
  pLsOpenSUSE = $LnxVmNamePrefix + 3 # Based on the latest image of Linux OpenSUSE-Leap 42.2
 } #end $ObjDomain
 
+# index 14
 # Subnet for Windows servers (WS)
 $wsSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetWS -AddressPrefix 10.10.10.0/28 -Verbose
+# index 15
 # Subnet for Linux servers (LS)
 $lsSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetLS -AddressPrefix 10.10.10.16/28 -Verbose
 
+# index 16
 $Vnet = New-AzureRmVirtualNetwork -Name $ObjDomain.pSite -ResourceGroupName $rg -Location $Region -AddressPrefix 10.10.10.0/26 -Subnet $wsSubnet,$lsSubnet -Verbose
 
 # NSG Configuration
@@ -443,7 +458,9 @@ $nsgWsSubnetObj = New-AzureRmNetworkSecurityGroup -Name $nsgWsSubnetName -Resour
 $nsgLsSubnetObj = New-AzureRmNetworkSecurityGroup -Name $nsgLsSubnetName -ResourceGroupName $rg -Location $Region -SecurityRules $nsgRuleAllowSshIn, $nsgRuleAllowWsManIn -Verbose
 
 # Associate NSGs with VNET subnets
+# index 17
 Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSubNetWS -AddressPrefix $wsSubnet.AddressPrefix -NetworkSecurityGroup $nsgWsSubnetObj | Set-AzureRmVirtualNetwork -Verbose
+# index 18
 Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSubNetLS -AddressPrefix $lsSubnet.AddressPrefix -NetworkSecurityGroup $nsgLsSubnetObj | Set-AzureRmVirtualNetwork -Verbose
 
 # Specify disk size as 10 GiB
@@ -842,6 +859,7 @@ Write-ToConsoleAndLog -Output $DelimDouble -Log $Log
 Write-ToConsoleAndLog -Output $SummObj -Log $Log
 Write-ToConsoleAndLog -Output $DelimDouble -Log $Log
 
+# index 19
 # Verify parameter values
 Do {
 $ResponsesObj.pProceed = read-host $PromptsObj.pVerifySummary
@@ -881,11 +899,13 @@ else
   $saName  = $randomString.Substring(4,8)
  } #end while
  While (!((Get-AzureRmStorageAccountNameAvailability -Name $saName).NameAvailable)) 
+ # index 20
  New-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Location $Region -Type Standard_LRS -Kind Storage -Verbose
  
  $saResource = Get-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Verbose
  $storageKeyPri = (Get-AzureRmStorageAccountKey -ResourceGroupName $rg -Name $saName).Value[0]
-
+ 
+ # index 21
  # Specify custom script directory, file and full local source path
  $ScriptDir = Join-Path -Path $LogPath -ChildPath "Scripts"
 
@@ -894,6 +914,7 @@ else
     New-Item -Path $ScriptDir -ItemType Directory
  } #end if
 
+ # index 22
  $ModulesDir = Join-Path -Path $LogPath -ChildPath "Modules"
 
  If (-not(Test-Path -Path $ModulesDir))
@@ -913,6 +934,7 @@ else
  $Repository = "0008-New-PowerShellOnLinuxLab"
  $Branch = "master"
 
+ # index 23
  Write-WithTime -Output "Checking local Linux and DSC configuration script paths..." -Log $Log 
  If (!(Test-Path -Path $lnxCustomScriptPath) -and (!(Test-Path -Path $dscScriptSourcePath)))
  {  
@@ -952,20 +974,27 @@ else
 
 # Use PowerShell splatting to pass parameters to the Azure Automation cmdlet being invoked
 # For more info about splatting, run: Get-Help -Name about_Splatting
+# index 24
 Get-AzureRmAutomationDscOnboardingMetaconfig @Params -Confirm:$false -Force
 $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recurse
 # Create blob containers
  If ($saResource -ne $null)
  {
+    # index 25
     # Create container for scripts and temporary secrets
     New-AzureStorageContainer -Name $saContainerStaging -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+    # index 26
     # Create container for DSC and artifacts
     New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
+    # index 27
     # Upload Linux custom script
     Set-AzureStorageBlobContent -File $lnxCustomScriptPath -Blob $lnxCustomScript -Container $saContainerStaging -BlobType Block -Context $saResource.Context -Force -Verbose
+    # index 28
     # Upload DSC Mof file
     Set-AzureStorageBlobContent -File $reqModNameZipPath -Blob $requiredModuleNameZip -Container $saContainerDSC -BlobType Block -Context $saResource.Context -Force -Verbose
  } #end if
+ 
+ # index 29
  # Upload metamofs
  $dscMetaMofBlobUri = @()
  ForEach ($mof in $dscMetaConfigsMof)
@@ -973,11 +1002,14 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
    Set-AzureStorageBlobContent -File $mof.FullName -Blob $mof.Name -Container $saContainerDSC -BlobType Block -Context $saResource.Context -Force -Verbose
    $dscMetaMofBlobUri += ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $mof.Name
  } #end foreach
-   
+  
  # Construct full path to custom script block blob
  $scriptBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerStaging + "/" + $lnxCustomScript
  # $mofBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $mofFileName
  $moduleBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $requiredModuleNameZip
+ 
+ # index 30
+ # Import nx module to Azure Automation Account
  New-AzureRmAutomationModule -AutomationAccountName $autoAcct -Name $requiredModuleName -ContentLink $moduleBlobUri -ResourceGroupName $autoAcctRg -Verbose
   Do
      {
@@ -989,9 +1021,12 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
  $linuxFileConfigName = "AddLinuxFileConfig"
  $linuxNodeConfigName = "AddLinuxFileConfig.localhost"
  
- # New-AzureRmAutomationModule -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -Name $requiredModuleName -ContentLink $dscModuleBlobUri -Verbose
+ # index 31
+ # Import DSC configuration to Azure Automation
  Import-AzureRmAutomationDscConfiguration -AutomationAccountName $autoAcct -ResourceGroupName $autoAcctRg -SourcePath $dscScriptSourcePath -Description "Simple DSC file addition example" -Published -LogVerbose $true -Force
 
+ # index 32
+ # Compile DSC configuration
  $CompilationJob = Start-AzureRmAutomationDscCompilationJob -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -ConfigurationName $linuxFileConfigName -Verbose
  while($CompilationJob.EndTime –eq $null -and $CompilationJob.Exception –eq $null)           
     {
@@ -1000,6 +1035,8 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
     } #end while
  $CompilationJob | Get-AzureRmAutomationDscCompilationJobOutput –Stream Any 
  
+ # index 33
+ # Deploy Windows servers
  Write-ToConsoleAndLog -Output "Deploying environment..." -Log $Log
  For ($w = 1; $w -le $WindowsInstanceCount; $w++)
 	{
@@ -1009,6 +1046,8 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
  	} #end ForEach
  # Initialize index for each linux system
  $i = 0
+ 
+ # index 34
  # Build each linux system in collection
  ForEach ($LinuxSystem in $LinuxSystems)
  {
@@ -1038,6 +1077,8 @@ Write-ToConsoleAndLog -Output "$Footer $EndTime" -Log $Log
 Write-ToConsoleAndLog -Output "TOTAL SCRIPT EXECUTION TIME: $ExecutionTime" -Log $Log
 Write-ToConsoleAndLog -Output $DelimDouble -Log $Log
 
+# index 35
+# Review deployment logs
 # Prompt to open logs
 Do 
 {
@@ -1071,6 +1112,7 @@ $sshSession = New-SSHSession -ComputerName "<[ip-address[es]]>" -Credential $lin
 Invoke-SSHCommand -Command { sudo cat /tmp/dir/file } -SSHSession $sshSession | Select-Object -ExpandProperty Output
 #>
 
+# index 36
 <#
  AZURE AUTOMATION DSC LINUX DEMO - TESTED ON: UbuntuServer LTS 16.04, CentOS 7.3 & openSUSE-Leap 42.2
  ====================================================================================================
