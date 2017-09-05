@@ -129,7 +129,7 @@ TASK ITEMS
 0010. [fixed] Fix log and transcript files to automatically open at end of script after prompt.
 0011. [pending] Update region codes list.
 0012. [done] Remove redundant line: New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
-0013. [pending] Add comment tags for numeric indices on diagram
+0013. [done] Add comment tags for numeric indices on diagram.
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -365,7 +365,7 @@ $winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName
 # index 10
 $lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 $Region -Managed -Verbose
 $SiteNamePrefix = "net"
-$gtld = ".lab"
+$gtld = ".com"
 
 Write-ToConsoleAndLog -Output "Please create a password for your Windows VM $windowsAdminName account :" -Log $Log
 
@@ -1112,6 +1112,7 @@ $sshSession = New-SSHSession -ComputerName "<[ip-address[es]]>" -Credential $lin
 Invoke-SSHCommand -Command { sudo cat /tmp/dir/file } -SSHSession $sshSession | Select-Object -ExpandProperty Output
 #>
 
+#region POST-DEPLOYMENT TESTING
 # index 36
 <#
  AZURE AUTOMATION DSC LINUX DEMO - TESTED ON: UbuntuServer LTS 16.04, CentOS 7.3 & openSUSE-Leap 42.2
@@ -1172,6 +1173,7 @@ Invoke-SSHCommand -Command { sudo cat /tmp/dir/file } -SSHSession $sshSession | 
  14. Exit the PowerShell console
  PS /home/linuxuser> exit
 #>
+#endregion POST-DEPLOYMENT TESTING
 
 <#
 To gracefully remove deployed resources, execute the following commands
