@@ -127,7 +127,7 @@ TASK ITEMS
 0008. [done] Update Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each. 
 0009. [fixed] Rollback commit 794cf324371b5e9487ed315dbf8f7b103b0b4295 due to error: Compress-Archive : The path '\Users\prestopa\New-PowerShellOnLinuxLab\Modules\nx' either does not exist or is not a valid file system path.
 0010. [fixed] Fix log and transcript files to automatically open at end of script after prompt.
-0011. [pending] Update region codes list.
+0011. [done] Update region codes list.
 0012. [done] Remove redundant line: New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
 0013. [done] Add comment tags for numeric indices on diagram.
 #>
@@ -252,6 +252,8 @@ $RegionCode = @{
 	WEUK1 = "ukwest"
 	WCUS1 = "westcentralus"
 	WEUS2 = "westus2"
+    KREAC = "koreacentral"
+    KREAS = "koreasouth"
 } #end HashTable
 
 $winFunctionCode = "WNDS"
