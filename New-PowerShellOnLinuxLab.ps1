@@ -130,6 +130,7 @@ TASK ITEMS
 0011. [done] Update region codes list.
 0012. [done] Remove redundant line: New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
 0013. [done] Add comment tags for numeric indices on diagram.
+0014. [done] Comment updates for Get-GitHubRepositoryFile & Changed Get-GitHubRepositoryFiles (plural) to Get-GitHubRepositoryFile (singular). Also type for $FilesToDownload variable.
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -765,7 +766,7 @@ Function Add-LinuxVm
  } #end switch
 } #End function
 
-function Get-GitHubRepositoryFiles
+function Get-GitHubRepositoryFile
 {
 <#
 .Synopsis
@@ -780,7 +781,7 @@ function Get-GitHubRepositoryFiles
         1. https://github.com/MSAdministrator
         2. https://raw.githubusercontent.com/MSAdministrator/GetGithubRepository
     REQUIREMENTS: 
-    1. The repository from which the script artifacts are downloaded must be public to avoid requirements authentication
+    1. The repository from which the script artifacts are downloaded must be public to avoid  authentication
 .LINK
     http://windowsitpro.com/powershell/use-net-webclient-class-powershell-scripts-access-web-data
     http://windowsitpro.com/site-files/windowsitpro.com/files/archive/windowsitpro.com/content/content/99043/listing_03.txt
@@ -941,7 +942,7 @@ else
  If (!(Test-Path -Path $lnxCustomScriptPath) -and (!(Test-Path -Path $dscScriptSourcePath)))
  {  
     Write-WithTime -Output "Linux and DSC scripts were not found in the specified path. Downloading scripts from GitHub source..." -Log $Log 
-    Get-GitHubRepositoryFiles -Owner $Owner -Repository $Repository -Branch $Branch -Files $FilestToDownload -DownloadTargetDirectory $ScriptDir
+    Get-GitHubRepositoryFile -Owner $Owner -Repository $Repository -Branch $Branch -Files $FilesToDownload -DownloadTargetDirectory $ScriptDir
  } #end if
 
  $saContainerStaging = "staging"
