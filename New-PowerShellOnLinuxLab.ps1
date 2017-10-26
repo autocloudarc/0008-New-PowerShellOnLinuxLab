@@ -131,6 +131,7 @@ TASK ITEMS
 0012. [done] Remove redundant line: New-AzureStorageContainer -Name $saContainerDSC -Context $saResource.Context -Permission Container -ErrorAction SilentlyContinue -Verbose
 0013. [done] Add comment tags for numeric indices on diagram.
 0014. [done] Comment updates for Get-GitHubRepositoryFile & Changed Get-GitHubRepositoryFiles (plural) to Get-GitHubRepositoryFile (singular). Also type for $FilesToDownload variable.
+0015. [pending] Updated log to logs: pAskToOpenLogs = "Would you like to open the custom and transcript logs now ? [YES/NO]"
 #>
 
 #region PRE-REQUISITE FUNCTIONS
@@ -284,7 +285,7 @@ Until (($rg) -match '^rg\d{2}$')
 # PROMPTS (PromptsObj)
 $PromptsObj = [PSCustomObject]@{
  pVerifySummary = "Is this information correct? [YES/NO]"
- pAskToOpenLogs = "Would you like to open the deployment log now ? [YES/NO]"
+ pAskToOpenLogs = "Would you like to open the custom and transcript logs now ? [YES/NO]"
 } #end $PromptsObj
 
 # Create and populate responses object with property-value pairs
@@ -901,7 +902,7 @@ else
   $randomString = New-RandomString
   $saName  = $randomString.Substring(4,8)
  } #end while
- While (!((Get-AzureRmStorageAccountNameAvailability -Name $saName).NameAvailable)) 
+ While (-not((Get-AzureRmStorageAccountNameAvailability -Name $saName).NameAvailable)) 
  # index 20
  New-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Location $Region -Type Standard_LRS -Kind Storage -Verbose
  
@@ -1123,7 +1124,7 @@ Invoke-SSHCommand -Command { sudo cat /tmp/dir/file } -SSHSession $sshSession | 
  $linuxuser@AZREAUS2LNX01~$ sudo cat /tmp/dir/file
  hello world
  -or-
- $linuxuser@AZREAUS2LNX01~$ powershell
+ $linuxuser@AZREAUS2LNX01~$ pwsh
  PS /home/linuxuser> Get-Content -Path /tmp/dir/file
  hello world
  
@@ -1132,7 +1133,7 @@ Invoke-SSHCommand -Command { sudo cat /tmp/dir/file } -SSHSession $sshSession | 
  Ref: https://www.ostechnix.com/how-to-install-windows-powershell-in-linux/
 
  0. Open powershell
- $linuxuser@AZREAUS2LNX01~$ powershell
+ $linuxuser@AZREAUS2LNX01~$ pwsh
 
  1. View the PowerShell version
  PS /home/linuxuser> $PSVersionTable
