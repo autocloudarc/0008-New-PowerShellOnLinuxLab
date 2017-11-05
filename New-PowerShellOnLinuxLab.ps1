@@ -374,7 +374,7 @@ $windowsAdminName = "ent.g001.s001"
 # Make the Linux admin username the same as Windows
 $linuxAdminName = "linuxuser"
 # Virtual Machine size
-$wsVmSize = "Standard_D1_v2"
+$wsVmSize = "Standard_A1_v2"
 $lsVmSize = $wsVmSize
 # Availability sets
 $AvSetLsName = "AvSetLNUX"
