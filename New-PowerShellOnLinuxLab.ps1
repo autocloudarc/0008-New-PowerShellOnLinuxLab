@@ -380,9 +380,9 @@ $lsVmSize = $wsVmSize
 $AvSetLsName = "AvSetLNUX"
 $AvSetWsName = "AvSetWNDS"
 # index 09
-$winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku Managed
+$winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Managed
 # index 10
-$lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku Managed
+$lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Managed
 $SiteNamePrefix = "net"
 $gtld = ".com"
 
