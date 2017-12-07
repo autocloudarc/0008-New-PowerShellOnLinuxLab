@@ -172,10 +172,7 @@ function Get-PSGalleryModule
 	foreach ($Module in $ModulesToInstall)
 	{
 		# To avoid multiple versions of a module is installed on the same system, first uninstall any previously installed and loaded versions if they exist
-		If ($Module -notlike "Azure")
-        {
-            Uninstall-Module -Name $Module -AllVersions -Force -ErrorAction SilentlyContinue -Verbose
-		} #end
+        Uninstall-Module -Name $Module -AllVersions -Force -ErrorAction SilentlyContinue -Verbose
 
 		# If the modules aren't already loaded, install and import it
 		If (!(Get-Module -Name $Module))
