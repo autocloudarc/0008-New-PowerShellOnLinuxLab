@@ -165,7 +165,10 @@ function Get-PSGalleryModule
 		[ValidateNotNullOrEmpty()]
 		[string[]]$ModulesToInstall
 	) #end param
-	
+
+    # NOTE: The newest version of the PowerShellGet module can be found at: https://github.com/PowerShell/PowerShellGet/releases
+    # 1. Always ensure that you have the latest version	
+
 	$Repository = "PSGallery"
 	Set-PSRepository -Name $Repository -InstallationPolicy Trusted
 	Install-PackageProvider -Name Nuget -ForceBootstrap -Force	
@@ -199,7 +202,7 @@ function New-AzureRmAuthentication
 # index 01
 # Get any PowerShellGallery.com modules required for this script.
 # Check contents of "Azure" module to see if it's ASM related
-Get-PSGalleryModule -ModulesToInstall "AzureRM", "WriteToLogs", "Posh-SSH", "nx"
+Get-PSGalleryModule -ModulesToInstall "Azure", "WriteToLogs", "Posh-SSH", "nx"
 
 #endregion PREREQUISITE FUNCTIONS
 
