@@ -71,13 +71,23 @@ if echo "$linuxDistro" | grep -q -i "Ubuntu"; then
 
     # Install PowerShell Core 6.0
     # Add PowerShell repository public key
-    curl "$powershellRepPubKeyUri" | apt-key add -
+    
+    # Uncomment after testing [22 DEC 2017]
+    # curl "$powershellRepPubKeyUri" | apt-key add -
+    
     # Add PowerShell repository
-    curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | tee /etc/apt/sources.list.d/microsoft.list
+    
+    # Uncomment after testing [22 DEC 2017]
+    # curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | tee /etc/apt/sources.list.d/microsoft.list
+    
     # Update software sources list
-    apt-get update
+    
+    # Uncomment after testing [22 DEC 2017]
+    # apt-get update
+
     # Install PowerShell
-    apt-get install -y powershell
+    # Uncomment after testing [22 DEC 2017]
+    # apt-get install -y powershell
 
     # Enable DSC
     /opt/microsoft/dsc/Scripts/dsc.py -enable
@@ -111,11 +121,19 @@ elif echo "$linuxDistro" | grep -q -i "CentOS"; then
 
     # Install PowerShell Core 6.0
     # Add PowerShell repository
-    curl https://packages.microsoft.com/config/rhel/7/prod.repo > /etc/yum.repos.d/microsoft.repo
+    
+    # Uncomment after testing [22 DEC 2017]
+    # curl https://packages.microsoft.com/config/rhel/7/prod.repo > /etc/yum.repos.d/microsoft.repo
+    
     # Update software sources list
-    yum update -y
+    
+    # Uncomment after testing [22 DEC 2017]
+    # yum update -y
+    
     # Install PowerShell
-    yum install -y powershell
+    
+    # Uncomment after testing [22 DEC 2017]
+    # yum install -y powershell
 
     # Enable DSC
     /opt/microsoft/dsc/Scripts/dsc.py -enable
@@ -143,9 +161,15 @@ elif echo "$linuxDistro" | grep -q -i "openSUSE Leap"; then
     # To check, use: sudo SuSEfirewall2 status | grep 5986
     # Install PowerShell Core 6.0
     # Add PowerShell repository
+    
+    # Uncomment after testing [22 DEC 2017]
     rpm --import "$powershellRepPubKeyUri"
+    
     # Install PowerShell
+    
+    # Uncomment after testing [22 DEC 2017]
     zypper --non-interactive install "$powershellForOpenSuSEUri"
+    
     # sudo zypper remove powershell
     
     # Enable DSC
