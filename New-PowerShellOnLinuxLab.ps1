@@ -198,7 +198,8 @@ function New-AzureRmAuthentication
 
 # index 01
 # Get any PowerShellGallery.com modules required for this script.
-Get-PSGalleryModule -ModulesToInstall "Azure", "WriteToLogs", "Posh-SSH", "nx"
+# Check contents of "Azure" module to see if it's ASM related
+Get-PSGalleryModule -ModulesToInstall "AzureRM", "WriteToLogs", "Posh-SSH", "nx"
 
 #endregion PREREQUISITE FUNCTIONS
 
