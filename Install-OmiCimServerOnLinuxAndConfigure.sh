@@ -163,12 +163,12 @@ elif echo "$linuxDistro" | grep -q -i "openSUSE Leap"; then
     # Add PowerShell repository
     
     # Uncomment after testing [22 DEC 2017]
-    rpm --import "$powershellRepPubKeyUri"
+    # rpm --import "$powershellRepPubKeyUri"
     
     # Install PowerShell
     
     # Uncomment after testing [22 DEC 2017]
-    zypper --non-interactive install "$powershellForOpenSuSEUri"
+    # zypper --non-interactive install "$powershellForOpenSuSEUri"
     
     # sudo zypper remove powershell
     
