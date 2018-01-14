@@ -64,8 +64,8 @@ if echo "$linuxDistro" | grep -q -i "Ubuntu"; then
     # dpkg -i "$dscDebPackage"
     # Enable, configure and reload firewall to support PowerShell remoting
     ufw enable
-    ufw allow 5986/tcp
-    # ufw allow 22/tcp
+    # ufw allow 5986/tcp
+    ufw allow 22/tcp
     ufw reload
     # To check firwall, use: ufw status verbose
 
@@ -114,7 +114,8 @@ elif echo "$linuxDistro" | grep -q -i "CentOS"; then
     # rpm -Uvh "$dscRpmPackage"
     # After the OMI CIM server is installed, start firewall, configure for PowerShell remoting and reload to apply configuration
     systemctl start firewalld.service
-    firewall-cmd --zone=public --add-port=5986/tcp --permanent
+    # firewall-cmd --zone=public --add-port=5986/tcp --permanent
+    firewall-cmd --zone=public --add-port=22/tcp --permanent
     firewall-cmd --reload
     # To check this configuration after logging in, use:
     # sudo firewall-cmd --zone=public --list-all
@@ -154,8 +155,8 @@ elif echo "$linuxDistro" | grep -q -i "openSUSE Leap"; then
     # rpm -Uvh "$dscRpmPackage"
     # After the OMI CIM server is installed, start firewall, configure for PowerShell remoting and restart firewall to apply configurtion
     systemctl enable SuSEfirewall2
-    SuSEfirewall2 open EXT TCP 5986
-    # SuSEfirewall2 open EXT TCP 22
+    # SuSEfirewall2 open EXT TCP 5986
+    SuSEfirewall2 open EXT TCP 22
     systemctl restart SuSEfirewall2.service
     SuSEfirewall2 on
     # To check, use: sudo SuSEfirewall2 status | grep 5986
