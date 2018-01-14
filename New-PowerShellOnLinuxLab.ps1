@@ -1123,7 +1123,7 @@ ElseIf ($ResponsesObj.pOpenLogsNow -in 'N','NO')
 Stop-Transcript -Verbose
 
 #endregion FOOTER
-cn
+
 # https://blogs.technet.microsoft.com/stefan_stranger/2017/01/12/installing-linux-packages-on-an-azure-vm-using-powershell-dsc/
 # Authenticate, connect and test the results of the DSC configuration applied to the VM
 <#
