@@ -944,7 +944,7 @@ else
 
  # TASK-ITEM: Save-Module -Name nx
  
- $lnxCustomScript = "Install-OmiCimServerOnLinuxAndConfigure.sh"
+ $lnxCustomScript = "Install-PowerShellOnLinux.sh"
  $lnxDscScript = "AddLinuxFileConfig.ps1"
  $lnxCustomScriptPath = Join-Path $scriptDir -ChildPath $lnxCustomScript
  $dscScriptSourcePath = Join-Path $scriptDir -ChildPath $lnxDscScript
