@@ -1117,10 +1117,10 @@ If ($ResponsesObj.pOpenLogsNow -in 'Y','YES')
 ElseIf ($ResponsesObj.pOpenLogsNow -in 'N','NO') 
 { 
     Write-WithTime -Output $EndOfScriptMessage -Log $Log
-    Stop-Transcript -Verbose 
+    Stop-Transcript -Verbose -ErrorAction SilentlyContinue
 } #end condition
 
-Stop-Transcript -Verbose
+Stop-Transcript -Verbose -ErrorAction SilentlyContinue
 
 #endregion FOOTER
 
