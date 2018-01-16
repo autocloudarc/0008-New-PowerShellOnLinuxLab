@@ -959,8 +959,8 @@ else
  If (!(Test-Path -Path $lnxCustomScriptPath) -or (!(Test-Path -Path $dscScriptSourcePath)))
  {  
     # Remove both files
-    Remove-Item -Path $lnxCustomScriptPath -Verbose -Force
-    Remove-Item -Path $dscScriptSourcePath -Verbose -Force
+    Remove-Item -Path $lnxCustomScriptPath -Verbose -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path $dscScriptSourcePath -Verbose -Force -ErrorAction SilentlyContinue
     Write-WithTime -Output "Linux and DSC scripts were not found in the specified path. Downloading scripts from GitHub source..." -Log $Log 
     Get-GitHubRepositoryFile -Owner $Owner -Repository $Repository -Branch $Branch -Files $FilesToDownload -DownloadTargetDirectory $ScriptDir
  } #end if
