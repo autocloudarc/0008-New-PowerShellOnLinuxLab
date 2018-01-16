@@ -956,8 +956,11 @@ else
 
  # index 23
  Write-WithTime -Output "Checking local Linux and DSC configuration script paths..." -Log $Log 
- If (!(Test-Path -Path $lnxCustomScriptPath) -and (!(Test-Path -Path $dscScriptSourcePath)))
+ If (!(Test-Path -Path $lnxCustomScriptPath) -or (!(Test-Path -Path $dscScriptSourcePath)))
  {  
+    # Remove both files
+    Remove-Item -Path $lnxCustomScriptPath -Verbose -Force
+    Remove-Item -Path $dscScriptSourcePath -Verbose -Force
     Write-WithTime -Output "Linux and DSC scripts were not found in the specified path. Downloading scripts from GitHub source..." -Log $Log 
     Get-GitHubRepositoryFile -Owner $Owner -Repository $Repository -Branch $Branch -Files $FilesToDownload -DownloadTargetDirectory $ScriptDir
  } #end if

@@ -11,6 +11,7 @@
 # https://blogs.technet.microsoft.com/stefan_stranger/2017/01/12/installing-linux-packages-on-an-azure-vm-using-powershell-dsc/
 # https://msdn.microsoft.com/en-us/powershell/dsc/lnxfileresource
 # https://github.com/PowerShell/PowerShell/blob/master/docs/installation/linux.md
+# https://github.com/Azure/azure-linux-extensions/tree/master/CustomScript
 
 
 powershellRepPubKeyUri="https://packages.microsoft.com/keys/microsoft.asc"
@@ -49,7 +50,7 @@ elif echo "$linuxDistro" | grep -q -i "openSUSE Leap"; then
 fi
 
 # If installing using Linux custom script extensions to an Azure VM, check results using...
-# sudo cat /var/log/azure/Microsoft.OSTCExtensions.CustomScriptForLinux/1.5.2.1/extension.log
+# sudo cat /var/log/azure/Microsoft.OSTCExtensions.CustomScriptForLinux/<version>/extension.log
 # sudo cat /var/log/azure/Microsoft.OSTCExtensions.DSCForLinux/2.2.0.0/extension.log
 
 <<COMMENT2
