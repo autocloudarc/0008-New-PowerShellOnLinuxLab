@@ -384,7 +384,7 @@ $AvSetWsName = "AvSetWNDS"
 $winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku aligned
 # index 10
 $lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku aligned
-$SiteNamePrefix = "net"
+# $SiteNamePrefix = "net"
 $gtld = ".com"
 
 Write-ToConsoleAndLog -Output "Please create a password for your Windows VM $windowsAdminName account :" -Log $Log
@@ -968,7 +968,7 @@ else
  $saContainerStaging = "staging"
  $saContainerDSC = "powershell-dsc"
 
- $linuxDscConfigName = $lnxDscScript.Split(".")[0]
+ # $linuxDscConfigName = $lnxDscScript.Split(".")[0]
  $modulesSourceDir = "C:\Program Files\WindowsPowerShell\Modules"
  $requiredModuleName = "nx"
  $requiredModuleNameZip = "nx.zip"
