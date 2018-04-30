@@ -191,7 +191,7 @@ function New-AzureRmAuthentication
 {
     # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
 	Clear-AzureProfile -Force
-	Add-AzureRmAccount
+	Connect-AzureRmAccount
 } #end function
 
 # Modules to add
