@@ -12,6 +12,7 @@
 # https://msdn.microsoft.com/en-us/powershell/dsc/lnxfileresource
 # https://github.com/PowerShell/PowerShell/blob/master/docs/installation/linux.md
 # https://github.com/Azure/azure-linux-extensions/tree/master/CustomScript
+# r15. https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-powershell-core-on-linux?view=powershell-6
 
 
 powershellRepPubKeyUri="https://packages.microsoft.com/keys/microsoft.asc"
@@ -24,28 +25,30 @@ if echo "$linuxDistro" | grep -q -i "Ubuntu"; then
     # Add PowerShell repository public key
     curl "$powershellRepPubKeyUri" | apt-key add -
     # Register the Microsoft Ubuntu repository   
-    curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | sudo tee /etc/apt/sources.list.d/microsoft.list
+    # task-item: Test new installation command below from r15 reference in header
+    # curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | sudo tee /etc/apt/sources.list.d/microsoft.list
+    curl -o /etc/apt/sources.list.d/microsoft.list https://packages.microsoft.com/config/ubuntu/16.04/prod.list
     # Update software sources list
     apt-get update
     # Install PowerShell
-    sudo apt-get install -y powershell
+    apt-get install -y powershell
 elif echo "$linuxDistro" | grep -q -i "CentOS"; then
     # Install PowerShell Core 6.0
     # Add PowerShell repository
     curl https://packages.microsoft.com/config/rhel/7/prod.repo | sudo tee /etc/yum.repos.d/microsoft.repo  
 
     # Install PowerShell   
-    sudo yum install -y powershell
+    yum install -y powershell
 elif echo "$linuxDistro" | grep -q -i "openSUSE Leap"; then
     # Install PowerShell Core 6.0
     # Register the Microsoft signature key  
-    sudo rpm --import "$powershellRepPubKeyUri"
+    rpm --import "$powershellRepPubKeyUri"
     # Add the Microsoft Product feed
     curl https://packages.microsoft.com/config/rhel/7/prod.repo | sudo tee /etc/zypp/repos.d/microsoft.repo
     # Update the list of products
-    sudo zypper --non-interactive update
+    zypper --non-interactive update
     # Install PowerShell
-    sudo zypper --non-interactive install powershell
+    zypper --non-interactive install powershell
     # sudo zypper remove powershell
 fi
 
