@@ -2,12 +2,12 @@
 #requires -RunAsAdministrator
 <#
 .SYNOPSIS
-   	Creates up to 6 VMs for an Azure Linux Windows PowerShell Lab consisting of 1-3 Windows VMs, and 3 Linux VMs (Ubuntu, CentOS and openSUSE). 
+   	Creates up to 6 VMs for an Azure Linux Windows PowerShell Lab consisting of 1-3 Windows VMs, and 3 Linux VMs (Ubuntu, CentOS and openSUSE).
 .DESCRIPTION
-	This script will create a set of Azure VMs to demonstrate Windows PowerShell and Azure Automation DSC functionality on Linux VMs. The set of VMs that will be created are listed below in the .OUTPUTS help tag. 
-    however the number of Windows VMs is user specified from 1-3, since the deployment of Windows VMs are not essential for a basic demonstration of PowerShell on Linux, but will be required if Windows Push or Pull 
+	This script will create a set of Azure VMs to demonstrate Windows PowerShell and Azure Automation DSC functionality on Linux VMs. The set of VMs that will be created are listed below in the .OUTPUTS help tag.
+    however the number of Windows VMs is user specified from 1-3, since the deployment of Windows VMs are not essential for a basic demonstration of PowerShell on Linux, but will be required if Windows Push or Pull
     servers will be used in the lab. This project will be enhaced to eventually include those features also, but initially, the focus will be on configuring the Linux distros to support Azure Automation DSC and
-    PowerShell.    
+    PowerShell.
     The VM resources deployed are:
     1) 3 x Windows Server 2016
 2) 1 x UbuntuServer LTS 16.04
@@ -25,18 +25,18 @@
     4) 1 x openSUSE-Leap 42.2
 .NOTES
    	CURRENT STATUS: Released
-    REQUIREMENTS: 
+    REQUIREMENTS:
     1. A Windows Azure subscription
     2. Windows OS (Windows 7/Windows Server 2008 R2 or greater)
     2. Windows Management Foundation (WMF 5.0 or greater installed to support PowerShell 5.0 or higher version)
-    3. SSH key pair to authenticate to the Linux VMs. When the script executes, a prompt will appear asking for the public key path. 
+    3. SSH key pair to authenticate to the Linux VMs. When the script executes, a prompt will appear asking for the public key path.
 
    	LIMITATIONS	: Windows VM configurations and integration as Push/Pull servers.
    	AUTHOR(S)  	: Preston K. Parsard; https://github.com/autocloudarc
    	EDITOR(S)  	: Preston K. Parsard; https://github.com/autocloudarc
    	KEYWORDS   	: Linux, Azure, PowerShell, DSC
-   
-	REFERENCES : 
+
+	REFERENCES :
     1. https://gallery.technet.microsoft.com/scriptcenter/Build-AD-Forest-in-Windows-3118c100
     2. http://blogs.technet.com/b/heyscriptingguy/archive/2013/06/22/weekend-scripter-getting-started-with-windows-azure-and-powershell.aspx
     3. http://michaelwasham.com/windows-azure-powershell-reference-guide/configuring-disks-endpoints-vms-powershell/
@@ -72,19 +72,19 @@
     The MIT License (MIT)
     Copyright (c) 2017 Preston K. Parsard
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
     to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
     copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. 
+    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
     LEGAL DISCLAIMER:
-    This Sample Code is provided for the purpose of illustration only and is not intended to be used in a production environment.  
-    THIS SAMPLE CODE AND ANY RELATED INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, 
-    INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.  
-    We grant You a nonexclusive, royalty-free right to use and modify the Sample Code and to reproduce and distribute the object code form of the Sample Code, provided that You agree: 
-    (i) to not use Our name, logo, or trademarks to market Your software product in which the Sample Code is embedded; 
-    (ii) to include a valid copyright notice on Your software product in which the Sample Code is embedded; and 
+    This Sample Code is provided for the purpose of illustration only and is not intended to be used in a production environment. 
+    THIS SAMPLE CODE AND ANY RELATED INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED,
+    INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE. 
+    We grant You a nonexclusive, royalty-free right to use and modify the Sample Code and to reproduce and distribute the object code form of the Sample Code, provided that You agree:
+    (i) to not use Our name, logo, or trademarks to market Your software product in which the Sample Code is embedded;
+    (ii) to include a valid copyright notice on Your software product in which the Sample Code is embedded; and
     (iii) to indemnify, hold harmless, and defend Us and Our suppliers from and against any claims or lawsuits, including attorneys' fees, that arise or result from the use or distribution of the Sample Code.
     This posting is provided "AS IS" with no warranties, and confers no rights.
 
@@ -94,13 +94,13 @@
     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
     * Neither the name of Posh-SSH nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED 
-    WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+    WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
     PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
-    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
     POSSIBILITY OF SUCH DAMAGE.
 
 .COMPONENT
@@ -125,12 +125,12 @@
         # Specify the number of Windows VMs to build (default is 1, max is 3 based on subnet address space)
         [Parameter(ValueFromPipeline=$true,
                    HelpMessage = "Specify the number of Windows VMs to build (default is 1, max is 3 based on subnet address space).",
-                   ValueFromRemainingArguments=$false, 
+                   ValueFromRemainingArguments=$false,
                    Position=0)]
         [int]$WindowsInstanceCount = 1
     ) #end param
 
-<# 
+<#
 TASK ITEMS
 0001. [pending] Use DSC to build first Windows VM as a domain controller.
 0002. [pending] If the instance count for Windows VM is at least 2, use DSC to build second Windows VM as an additional domain controller.
@@ -139,7 +139,7 @@ TASK ITEMS
 0005. [done] Fix node config as it does not appear in the new automation account.
 0006. [done] Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
 0007. [done][reverted]If modules downloaded earlier in this script have previously been moved to the staging location $ModulesDir before being uploaded to Azure Automation, remove them since they may have been an older version.
-0008. [done] Update Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each. 
+0008. [done] Update Get-GitHubRepositoryFiles function to use $wc.DownloadFile() method instead of $wc.DownloadString() to simply download instead of re-creating files and streming content to each.
 0009. [fixed] Rollback commit 794cf324371b5e9487ed315dbf8f7b103b0b4295 due to error: Compress-Archive : The path '\Users\prestopa\New-PowerShellOnLinuxLab\Modules\nx' either does not exist or is not a valid file system path.
 0010. [fixed] Fix log and transcript files to automatically open at end of script after prompt.
 0011. [done] Update region codes list.
@@ -167,18 +167,21 @@ function Get-PSGalleryModule
 	) #end param
 
     # NOTE: The newest version of the PowerShellGet module can be found at: https://github.com/PowerShell/PowerShellGet/releases
-    # 1. Always ensure that you have the latest version	
+    # 1. Always ensure that you have the latest version
 
 	$Repository = "PSGallery"
 	Set-PSRepository -Name $Repository -InstallationPolicy Trusted
-	Install-PackageProvider -Name Nuget -ForceBootstrap -Force	
+	Install-PackageProvider -Name Nuget -ForceBootstrap -Force
 	foreach ($Module in $ModulesToInstall)
 	{
-		# To avoid multiple versions of a module is installed on the same system, first uninstall any previously installed and loaded versions if they exist
-        Uninstall-Module -Name $Module -AllVersions -Force -ErrorAction SilentlyContinue -Verbose
-
+        # If module exists, update it
+        If (Get-Module -Name $Module)
+        {
+        # To avoid multiple versions of a module is installed on the same system, first uninstall any previously installed and loaded versions if they exist
+            Update-Module -Name $Module -MaximumVersion -Force -ErrorAction SilentlyContinue -Verbose
+        } #end if
 		# If the modules aren't already loaded, install and import it
-		If (!(Get-Module -Name $Module))
+		else
 		{
 			# https://www.powershellgallery.com/packages/WriteToLogs
 			Install-Module -Name $Module -Repository $Repository -Force -Verbose
@@ -190,7 +193,7 @@ function Get-PSGalleryModule
 function New-AzureRmAuthentication
 {
     # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
-	Clear-AzureProfile -Force
+	# Clear-AzureProfile -Force -ErrorAction SilentlyContinue
 	Connect-AzureRmAccount
 } #end function
 
@@ -201,8 +204,7 @@ function New-AzureRmAuthentication
 
 # index 01
 # Get any PowerShellGallery.com modules required for this script.
-# Check contents of "Azure" module to see if it's ASM related
-Get-PSGalleryModule -ModulesToInstall "Azure", "WriteToLogs", "Posh-SSH", "nx"
+Get-PSGalleryModule -ModulesToInstall "AzureRM", "WriteToLogs", "Posh-SSH", "nx"
 
 #endregion PREREQUISITE FUNCTIONS
 
@@ -233,11 +235,11 @@ New-Item -Path $Log -ItemType File -Verbose
 New-Item -Path $Transcript -ItemType File -Verbose
 #endregion SCRIPT LOG SETUP
 
-#region INITIALIZE VALUES	
+#region INITIALIZE VALUES
 
 # index 04
 # Authenticate to Azure.
-New-AzureRmAuthentication 
+New-AzureRmAuthentication
 
 Start-Transcript -Path $Transcript -IncludeInvocationHeader
 
@@ -512,11 +514,11 @@ Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSu
      REGION = $Region.ToUpper()
      LOGPATH = $Log
  } #end $SummObj
- 
-$EndOfScriptMessage = "END OF SCRIPT!" 
+
+$EndOfScriptMessage = "END OF SCRIPT!"
 #endregion INITIALIZE VALUES
 
-#region FUNCTIONS	
+#region FUNCTIONS
 
 Function New-RandomString
 {
@@ -541,11 +543,11 @@ Function New-RandomString
  } #end ForEach
 
  [string]$RandomStringWithSpaces = $PasswordArray
- [string]$RandomString = $RandomStringWithSpaces.Replace(" ","") 
+ [string]$RandomString = $RandomStringWithSpaces.Replace(" ","")
  Return [string]$RandomString
 } #end Function
 
-# Create Windows VM 
+# Create Windows VM
 Function Add-WindowsVm2016
 {
  # Create the public ip (PIP) and NIC names
@@ -554,7 +556,7 @@ Function Add-WindowsVm2016
  $wsPipName = $Ws2016 + "-pip"
  $wsPipName = $wsPipName.ToLower()
  Write-WithTime -Output "Creating NIC name..." -Log $Log
- $wsNicName = $Ws2016 + "-nic" 
+ $wsNicName = $Ws2016 + "-nic"
  $wsNicName = $wsNicName.ToLower()
 
  # Construct the drive names for the SYSTEM and DATA drives
@@ -578,15 +580,15 @@ Function Add-WindowsVm2016
 
  Write-WithTime -Output "Creating NIC..." -Log $Log
  $wsNic = New-AzureRmNetworkInterface -ResourceGroupName $rg -Name $wsNicName -Location $Region -PrivateIpAddress "10.10.10.$x" -SubnetId $Vnet.Subnets[0].Id -PublicIpAddressId $wsPip.Id -Verbose
- 
+
  # If the VM doesn't aready exist, configure and create it
  If (!((Get-AzureRmVM -ResourceGroupName $rg).Name -match $Ws2016))
  {
 		Write-WithTime -Output "VM $Ws2016 doesn't already exist. Configuring..." -Log $Log
   # Setup new vm configuration
    $wsVmConfig = New-AzureRmVMConfig –VMName $Ws2016 -VMSize $wsVmSize -AvailabilitySetId $winAvSet.Id |
-	Set-AzureRmVMOperatingSystem -Windows -ComputerName $Ws2016 -Credential $windowsCred -ProvisionVMAgent -EnableAutoUpdate | 
-   	Set-AzureRmVMSourceImage -PublisherName $imageObj.publisherWindows -Offer $imageObj.offerWindows -Skus $imageObj.skuWindows -Version $imageObj.versionWindows | 
+	Set-AzureRmVMOperatingSystem -Windows -ComputerName $Ws2016 -Credential $windowsCred -ProvisionVMAgent -EnableAutoUpdate |
+   	Set-AzureRmVMSourceImage -PublisherName $imageObj.publisherWindows -Offer $imageObj.offerWindows -Skus $imageObj.skuWindows -Version $imageObj.versionWindows |
    	Set-AzureRmVMOSDisk -Name $wsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
 
   # Add NIC
@@ -606,7 +608,7 @@ Function Add-WindowsVm2016
   # Add data disks
   Write-WithTime -Output "Adding data disk for NTDS, SYSV and LOGS directories..." -Log $Log
   Add-AzureRmVMDataDisk -VM $vmWs -Name $wsDriveNameData -StorageAccountType StandardLRS -Lun 0 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
- 
+
   # Update disk configuration
   Write-WithTime -Output "Applying new disk configurations..." -Log $Log
   Update-AzureRmVM -ResourceGroupName $rg -VM $vmWs -Verbose
@@ -617,7 +619,7 @@ Function Add-WindowsVm2016
  } #end else
 } #End function
 
-# Create Linux VM 
+# Create Linux VM
 # https://docs.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-powershell
 Function Add-LinuxVm
 {
@@ -627,7 +629,7 @@ Function Add-LinuxVm
  $lsPipName = $lsPipName.ToLower()
  Write-WithTime -Output "Creating NIC name..." -Log $Log
  $lsNicName = $LinuxSystem + "-nic"
- $lsNicName = $lsNicName.ToLower() 
+ $lsNicName = $lsNicName.ToLower()
 
  # Construct the drive names for the SYSTEM and DATA drives
  Write-WithTime -Output "Constructing SYSTEM drive name page blob..." -Log $Log
@@ -650,25 +652,25 @@ Function Add-LinuxVm
  $lsPip = New-AzureRmPublicIpAddress -ResourceGroupName $rg -Name $lsPipName -Location $Region -AllocationMethod Static -IdleTimeoutInMinutes 4 -DomainNameLabel $DomainLabel -Verbose
  Write-WithTime -Output "Creating NIC..." -Log $Log
  $lsNic = New-AzureRmNetworkInterface -ResourceGroupName $rg -Name $lsNicName -Location $Region -PrivateIpAddress "10.10.10.$y" -SubnetId $Vnet.Subnets[1].Id -PublicIpAddressId $lsPip.Id -Verbose
- 
+
  Switch ($i)
  {
-  1 { 
-        $publisher = $imageObj.publisherUbuntu 
+  1 {
+        $publisher = $imageObj.publisherUbuntu
         $offer = $imageObj.offerUbuntu
         $sku = $imageObj.skuUbuntu
         $version = $imageObj.versionUbuntu
     } #end 1
 
   2 {
-        $publisher = $imageObj.publisherCentOS 
+        $publisher = $imageObj.publisherCentOS
         $offer = $imageObj.offerCentOS
         $sku = $imageObj.skuCentOS
         $version = $imageObj.versionCentOS
-    } #end 2 
+    } #end 2
 
   3 {
-        $publisher = $imageObj.publisherOpenSUSE 
+        $publisher = $imageObj.publisherOpenSUSE
         $offer = $imageObj.offerOpenSUSE
         $sku = $imageObj.skuOpenSUSE
         $version = $imageObj.versionOpenSUSE
@@ -679,11 +681,11 @@ Function Add-LinuxVm
  If (-not((Get-AzureRmVM -ResourceGroupName $rg).Name -match $LinuxSystem))
  {
   Write-WithTime -Output "VM $LinuxSystem doesn't already exist. Configuring..." -Log $Log
-  
+
   # Setup new vm configuration
-   $lsVmConfig = New-AzureRmVMConfig –VMName $LinuxSystem -VMSize $lsVmSize -AvailabilitySetId $lnxAvSet.Id  | 
-   Set-AzureRmVMOperatingSystem -Linux -ComputerName $LinuxSystem -Credential $linuxCred -DisablePasswordAuthentication | 
-   Set-AzureRmVMSourceImage -PublisherName $publisher -Offer $offer -Skus $sku -Version $version | 
+   $lsVmConfig = New-AzureRmVMConfig –VMName $LinuxSystem -VMSize $lsVmSize -AvailabilitySetId $lnxAvSet.Id  |
+   Set-AzureRmVMOperatingSystem -Linux -ComputerName $LinuxSystem -Credential $linuxCred -DisablePasswordAuthentication |
+   Set-AzureRmVMSourceImage -PublisherName $publisher -Offer $offer -Skus $sku -Version $version |
    Set-AzureRmVMOSDisk -Name $lsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
 
   # Add NIC
@@ -692,11 +694,11 @@ Function Add-LinuxVm
   # Configure SSH Keys
   # http://technodrone.blogspot.com/2010/04/those-annoying-thing-in-powershell.html
   Add-AzureRmVMSshPublicKey -VM $lsVmConfig -KeyData ($sshPublicKey | Out-String) -Path $sshAuthorizedKeysPath
-  
+
   # Create new VM
   Write-WithTime -Output "Creating VM from configuration..." -Log $Log
   New-AzureRmVM -ResourceGroupName $rg -Location $Region -VM $lsVmConfig -Verbose
-  
+
   # Get current VM configuration
   $vmLs = Get-AzureRmVM -ResourceGroupName $rg -Name $LinuxSystem
 
@@ -707,11 +709,11 @@ Function Add-LinuxVm
   # Add data disks
   Write-WithTime -Output "Adding data disk..." -Log $Log
   Add-AzureRmVMDataDisk -VM $vmLs -Name $lsDriveNameData -StorageAccountType StandardLRS -Lun 1 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
- 
+
   # Update disk configuration
   Write-WithTime -Output "Applying new disk configurations..." -Log $Log
   Update-AzureRmVM -ResourceGroupName $rg -VM $vmLs -Verbose
-  
+
   Get-AzureRmAutomationDscOnboardingMetaconfig -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -OutputFolder $LogPath -Confirm:$false -Force
   $AutoRegPath = Join-Path -Path $LogPath -ChildPath 'DscMetaConfigs'
   $AutoRegFile = Join-Path -Path $AutoRegPath -ChildPath localhost.meta.mof
@@ -773,9 +775,9 @@ Function Add-LinuxVm
  {
   Write-ToConsoleAndLog -Output "$LinuxSystem already exists..." -Log $Log
  } #end else
- 
+
  # Add tag for OS version details
- Switch ($i) 
+ Switch ($i)
  {
   1 { Set-AzureRmResource -Tag @{ OsVersion="$($imageObj.urnUbuntu)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force }
   2 { Set-AzureRmResource -Tag @{ OsVersion="$($imageObj.urnCentOS)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force  }
@@ -794,10 +796,10 @@ function Get-GitHubRepositoryFile
    Get-GithubRepositoryFiles -Owner <Owner> -Repository <Repository> -Branch <Branch> -Files <Files[]> -DownloadTargetDirectory <DownloadTargetDirectory>
 .NOTES
     Author: Preston K. Parsard; https://github.com/autocloudarc
-    Ispired by: Josh Rickard; 
+    Ispired by: Josh Rickard;
         1. https://github.com/MSAdministrator
         2. https://raw.githubusercontent.com/MSAdministrator/GetGithubRepository
-    REQUIREMENTS: 
+    REQUIREMENTS:
     1. The repository from which the script artifacts are downloaded must be public to avoid  authentication
 .LINK
     http://windowsitpro.com/powershell/use-net-webclient-class-powershell-scripts-access-web-data
@@ -833,8 +835,8 @@ function Get-GitHubRepositoryFile
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [string[]]$Files,
-        
-        
+
+
         # Please provide a local target path for the GitHub files and folders
         [Parameter(Mandatory=$true,
                    Position=4,
@@ -845,7 +847,7 @@ function Get-GitHubRepositoryFile
     Begin
     {
         # Write-WithTime -Output "Downloading and installing" -Log $Log
-        Write-Output "Downloading and installing" 
+        Write-Output "Downloading and installing"
         $wc = New-Object System.Net.WebClient
         $RawGitHubUriPrefix = "https://raw.githubusercontent.com"
     } #end begin
@@ -856,8 +858,8 @@ function Get-GitHubRepositoryFile
             Write-WithTime -Output "Processing $File..." -Log $Log
             # File download
             $uri = $RawGitHubUriPrefix, $Owner, $Repository, $Branch, $File -Join "/"
-            Write-WithTime -Output "Attempting to download from $uri" -Log $Log 
-            $DownloadTargetPath = Join-Path -Path $DownloadTargetDirectory -ChildPath $File 
+            Write-WithTime -Output "Attempting to download from $uri" -Log $Log
+            $DownloadTargetPath = Join-Path -Path $DownloadTargetDirectory -ChildPath $File
             $wc.DownloadFile($uri, $DownloadTargetPath)
         } #end foreach
     } #end process
@@ -868,7 +870,7 @@ function Get-GitHubRepositoryFile
 
 #endregion FUNCTIONS
 
-#region MAIN	
+#region MAIN
 
 # Display header
 Write-ToConsoleAndLog -Output $DelimDouble -Log $Log
@@ -899,7 +901,7 @@ if ($ResponsesObj.pProceed -eq "N" -OR $ResponsesObj.pProceed -eq "NO")
   PAUSE
   EXIT
  } #end if ne Y
-else 
+else
 {
  # Proceed with deployment
 
@@ -913,18 +915,18 @@ else
  If the storage account name has already been taken, i.e. not available, continue to generate a new name that can be used.
  #>
 
- Do 
+ Do
  {
   $randomString = New-RandomString
   $saName  = $randomString.Substring(4,8)
  } #end while
- While (-not((Get-AzureRmStorageAccountNameAvailability -Name $saName).NameAvailable)) 
+ While (-not((Get-AzureRmStorageAccountNameAvailability -Name $saName).NameAvailable))
  # index 20
  New-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Location $Region -Type Standard_LRS -Kind Storage -Verbose
- 
+
  $saResource = Get-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Verbose
  $storageKeyPri = (Get-AzureRmStorageAccountKey -ResourceGroupName $rg -Name $saName).Value[0]
- 
+
  # index 21
  # Specify custom script directory, file and full local source path
  $ScriptDir = Join-Path -Path $LogPath -ChildPath "Scripts"
@@ -943,25 +945,25 @@ else
  } #end if
 
  # TASK-ITEM: Save-Module -Name nx
- 
+
  $lnxCustomScript = "Install-PowerShellOnLinux.sh"
  $lnxDscScript = "AddLinuxFileConfig.ps1"
  $lnxCustomScriptPath = Join-Path $scriptDir -ChildPath $lnxCustomScript
  $dscScriptSourcePath = Join-Path $scriptDir -ChildPath $lnxDscScript
  [string[]]$FilesToDownload = $lnxCustomScript, $lnxDscScript
- 
+
  $Owner = "autocloudarc"
  $Repository = "0008-New-PowerShellOnLinuxLab"
  $Branch = "master"
 
  # index 23
- Write-WithTime -Output "Checking local Linux and DSC configuration script paths..." -Log $Log 
+ Write-WithTime -Output "Checking local Linux and DSC configuration script paths..." -Log $Log
  If (!(Test-Path -Path $lnxCustomScriptPath) -or (!(Test-Path -Path $dscScriptSourcePath)))
- {  
+ {
     # Remove both files
     Remove-Item -Path $lnxCustomScriptPath -Verbose -Force -ErrorAction SilentlyContinue
     Remove-Item -Path $dscScriptSourcePath -Verbose -Force -ErrorAction SilentlyContinue
-    Write-WithTime -Output "Linux and DSC scripts were not found in the specified path. Downloading scripts from GitHub source..." -Log $Log 
+    Write-WithTime -Output "Linux and DSC scripts were not found in the specified path. Downloading scripts from GitHub source..." -Log $Log
     Get-GitHubRepositoryFile -Owner $Owner -Repository $Repository -Branch $Branch -Files $FilesToDownload -DownloadTargetDirectory $ScriptDir
  } #end if
 
@@ -981,7 +983,7 @@ else
 
  $dscMetaConfigsDir = Join-Path -Path $scriptDir -ChildPath DscMetaConfigs
  $dscMetaMofFiles = Get-ChildItem -Path $dscMetaConfigsDir
- If (($dscMetaMofFiles).Count -gt 0) 
+ If (($dscMetaMofFiles).Count -gt 0)
  {
      $dscMetaMofFiles | Remove-Item
  } # end if
@@ -1016,7 +1018,7 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
     # Upload DSC Mof file
     Set-AzureStorageBlobContent -File $reqModNameZipPath -Blob $requiredModuleNameZip -Container $saContainerDSC -BlobType Block -Context $saResource.Context -Force -Verbose
  } #end if
- 
+
  # index 29
  # Upload metamofs
  $dscMetaMofBlobUri = @()
@@ -1025,12 +1027,12 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
    Set-AzureStorageBlobContent -File $mof.FullName -Blob $mof.Name -Container $saContainerDSC -BlobType Block -Context $saResource.Context -Force -Verbose
    $dscMetaMofBlobUri += ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $mof.Name
  } #end foreach
-  
+
  # Construct full path to custom script block blob
  $scriptBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerStaging + "/" + $lnxCustomScript
  # $mofBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $mofFileName
  $moduleBlobUri = ($saResource).PrimaryEndpoints.Blob + $saContainerDSC + "/" + $requiredModuleNameZip
- 
+
  # index 30
  # Import nx module to Azure Automation Account
  New-AzureRmAutomationModule -AutomationAccountName $autoAcct -Name $requiredModuleName -ContentLink $moduleBlobUri -ResourceGroupName $autoAcctRg -Verbose
@@ -1043,7 +1045,7 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
 
  $linuxFileConfigName = "AddLinuxFileConfig"
  $linuxNodeConfigName = "AddLinuxFileConfig.localhost"
- 
+
  # index 31
  # Import DSC configuration to Azure Automation
  Import-AzureRmAutomationDscConfiguration -AutomationAccountName $autoAcct -ResourceGroupName $autoAcctRg -SourcePath $dscScriptSourcePath -Description "Simple DSC file addition example" -Published -LogVerbose $true -Force
@@ -1051,25 +1053,25 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
  # index 32
  # Compile DSC configuration
  $CompilationJob = Start-AzureRmAutomationDscCompilationJob -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -ConfigurationName $linuxFileConfigName -Verbose
- while($CompilationJob.EndTime –eq $null -and $CompilationJob.Exception –eq $null)           
+ while($CompilationJob.EndTime –eq $null -and $CompilationJob.Exception –eq $null)
     {
         $CompilationJob = $CompilationJob | Get-AzureRmAutomationDscCompilationJob
         Start-Sleep -Seconds 3
     } #end while
- $CompilationJob | Get-AzureRmAutomationDscCompilationJobOutput –Stream Any 
- 
+ $CompilationJob | Get-AzureRmAutomationDscCompilationJobOutput –Stream Any
+
  # index 33
  # Deploy Windows servers
  Write-ToConsoleAndLog -Output "Deploying environment..." -Log $Log
  For ($w = 1; $w -le $WindowsInstanceCount; $w++)
 	{
-		$Ws2016 = $WinVmNamePrefix + $w 
+		$Ws2016 = $WinVmNamePrefix + $w
 		Write-WithTime -Output "Building $Ws2016" -Log $Log
     	Add-WindowsVm2016
  	} #end ForEach
  # Initialize index for each linux system
  $i = 0
- 
+
  # index 34
  # Build each linux system in collection
  ForEach ($LinuxSystem in $LinuxSystems)
@@ -1082,7 +1084,7 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
 
 #endregion MAIN
 
-#region FOOTER		
+#region FOOTER
 
 # Calculate elapsed time
 Write-WithTime -Output "Calculating script execution time..." -Log $Log
@@ -1103,7 +1105,7 @@ Write-ToConsoleAndLog -Output $DelimDouble -Log $Log
 # index 35
 # Review deployment logs
 # Prompt to open logs
-Do 
+Do
 {
  $ResponsesObj.pOpenLogsNow = read-host $PromptsObj.pAskToOpenLogs
  $ResponsesObj.pOpenLogsNow = $ResponsesObj.pOpenLogsNow.ToUpper()
@@ -1111,14 +1113,14 @@ Do
 Until ($ResponsesObj.pOpenLogsNow -eq "Y" -OR $ResponsesObj.pOpenLogsNow -eq "YES" -OR $ResponsesObj.pOpenLogsNow -eq "N" -OR $ResponsesObj.pOpenLogsNow -eq "NO")
 
 # Exit if user does not want to continue
-If ($ResponsesObj.pOpenLogsNow -in 'Y','YES') 
+If ($ResponsesObj.pOpenLogsNow -in 'Y','YES')
 {
-    Start-Process -FilePath notepad.exe $Log 
+    Start-Process -FilePath notepad.exe $Log
     Start-Process -FilePath notepad.exe $Transcript
     Write-WithTime -Output $EndOfScriptMessage -Log $Log
 } #end condition
-ElseIf ($ResponsesObj.pOpenLogsNow -in 'N','NO') 
-{ 
+ElseIf ($ResponsesObj.pOpenLogsNow -in 'N','NO')
+{
     Write-WithTime -Output $EndOfScriptMessage -Log $Log
     Stop-Transcript -Verbose -ErrorAction SilentlyContinue
 } #end condition
@@ -1146,7 +1148,7 @@ Invoke-SSHCommand -Command { sudo cat /tmp/dir/file } -SSHSession $sshSession | 
  $linuxuser@AZREAUS2LNX01~$ pwsh
  PS /home/linuxuser> Get-Content -Path /tmp/dir/file
  hello world
- 
+
  POWERSHELL ON LINUX DEMO - TESTED ON: UbuntuServer LTS 16.04, CentOS 7.3 & openSUSE-Leap 42.2
  ====================================================================================================
  Ref: https://www.ostechnix.com/how-to-install-windows-powershell-in-linux/
