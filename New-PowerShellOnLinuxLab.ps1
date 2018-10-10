@@ -134,7 +134,7 @@
 TASK ITEMS
 0001. [pending] Use DSC to build first Windows VM as a domain controller.
 0002. [pending] If the instance count for Windows VM is at least 2, use DSC to build second Windows VM as an additional domain controller.
-0003. [pending] Check lines 349 & 350 to investigate warning message: WARNING: Parameter 'Managed' is obsolete. This parameter is obsolete.  Please use Sku parameter instead.
+0003. [done] Check lines 349 & 350 to investigate warning message: WARNING: Parameter 'Managed' is obsolete. This parameter is obsolete.  Please use Sku parameter instead.
 0004. [done] Fix missing transcript log issue.[c]
 0005. [done] Fix node config as it does not appear in the new automation account.
 0006. [done] Add -ErrorAction SilentlyContinue to suppress error for existing files at destination for: Move-Item -Path $reqModulesSourceDir -Destination $modulesDir -Force -ErrorAction SilentlyContinue
