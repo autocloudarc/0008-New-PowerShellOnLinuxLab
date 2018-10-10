@@ -586,7 +586,8 @@ Function Add-WindowsVm2016
  {
 		Write-WithTime -Output "VM $Ws2016 doesn't already exist. Configuring..." -Log $Log
   # Setup new vm configuration
-   $wsVmConfig = New-AzureRmVMConfig –VMName $Ws2016 -VMSize $wsVmSize -AvailabilitySetId $winAvSet.Id |
+  # Ref: https://github.com/MicrosoftDocs/OfficeDocs-Enterprise/issues/46
+  $wsVmConfig = New-AzureRmVMConfig –VMName $Ws2016 -VMSize $wsVmSize -AvailabilitySetId $winAvSet.Id |
 	Set-AzureRmVMOperatingSystem -Windows -ComputerName $Ws2016 -Credential $windowsCred -ProvisionVMAgent -EnableAutoUpdate |
    	Set-AzureRmVMSourceImage -PublisherName $imageObj.publisherWindows -Offer $imageObj.offerWindows -Skus $imageObj.skuWindows -Version $imageObj.versionWindows |
    	Set-AzureRmVMOSDisk -Name $wsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
