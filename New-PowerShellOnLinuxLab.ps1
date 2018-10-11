@@ -386,7 +386,6 @@ $AvSetWsName = "AvSetWNDS"
 $winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku aligned
 # index 10
 $lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku aligned
-$SiteNamePrefix = "net"
 $gtld = ".com"
 
 Write-ToConsoleAndLog -Output "Please create a password for your Windows VM $windowsAdminName account :" -Log $Log
@@ -410,7 +409,7 @@ Do
  $publickeyContent = Get-Content -Path $sshPublicKeyPath
  If (Test-Path -Path $sshPublicKeyPath)
  {
-  If ($publicKeyContent -ne $null)
+  If ($publicKeyContent)
   {
    $sshPublicKey = $publickeyContent
   } #end if
@@ -535,11 +534,14 @@ Function New-RandomString
  $CombinedCharArray = $PCR1AlphaUpper + $PCR3AlphaLower + $PCR4Numeric
  # This is the set of complexity rules, so it's an array of arrays
  $ComplexityRuleSets = ($PCR1AlphaUpper, $PCR3AlphaLower, $PCR4Numeric)
-
+ # Initialize password array
+ $PasswordArray = @()
+ $crsSample = $null
  # Sample 4 characters from each of the 3 complexity rule sets to generate a complete 12 character random string
  ForEach ($ComplexityRuleSet in $ComplexityRuleSets)
  {
-  Get-Random -InputObject $ComplexityRuleSet -Count $PCRSampleCount | ForEach-Object { $PasswordArray += $_ }
+  $crsSample = Get-Random -InputObject $ComplexityRuleSet -Count $PCRSampleCount
+  $PasswordArray += $crsSample
  } #end ForEach
 
  [string]$RandomStringWithSpaces = $PasswordArray
@@ -971,7 +973,6 @@ else
  $saContainerStaging = "staging"
  $saContainerDSC = "powershell-dsc"
 
- $linuxDscConfigName = $lnxDscScript.Split(".")[0]
  $modulesSourceDir = "C:\Program Files\WindowsPowerShell\Modules"
  $requiredModuleName = "nx"
  $requiredModuleNameZip = "nx.zip"
@@ -1004,7 +1005,7 @@ else
 Get-AzureRmAutomationDscOnboardingMetaconfig @Params -Confirm:$false -Force
 $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recurse
 # Create blob containers
- If ($saResource -ne $null)
+ If ($saResource)
  {
     # index 25
     # Create container for scripts and temporary secrets
@@ -1054,7 +1055,7 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
  # index 32
  # Compile DSC configuration
  $CompilationJob = Start-AzureRmAutomationDscCompilationJob -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -ConfigurationName $linuxFileConfigName -Verbose
- while($CompilationJob.EndTime –eq $null -and $CompilationJob.Exception –eq $null)
+ while(-not($CompilationJob.EndTime) -and (-not($CompilationJob.Exception)))
     {
         $CompilationJob = $CompilationJob | Get-AzureRmAutomationDscCompilationJob
         Start-Sleep -Seconds 3
@@ -1123,10 +1124,8 @@ If ($ResponsesObj.pOpenLogsNow -in 'Y','YES')
 ElseIf ($ResponsesObj.pOpenLogsNow -in 'N','NO')
 {
     Write-WithTime -Output $EndOfScriptMessage -Log $Log
-    Stop-Transcript -Verbose -ErrorAction SilentlyContinue
+    Stop-Transcript -ErrorAction SilentlyContinue
 } #end condition
-
-Stop-Transcript -ErrorAction SilentlyContinue -Verbose
 
 #endregion FOOTER
 
