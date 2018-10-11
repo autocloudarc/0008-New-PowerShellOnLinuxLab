@@ -590,7 +590,7 @@ Function Add-WindowsVm2016
   $wsVmConfig = New-AzureRmVMConfig –VMName $Ws2016 -VMSize $wsVmSize -AvailabilitySetId $winAvSet.Id |
 	Set-AzureRmVMOperatingSystem -Windows -ComputerName $Ws2016 -Credential $windowsCred -ProvisionVMAgent -EnableAutoUpdate |
    	Set-AzureRmVMSourceImage -PublisherName $imageObj.publisherWindows -Offer $imageObj.offerWindows -Skus $imageObj.skuWindows -Version $imageObj.versionWindows |
-   	Set-AzureRmVMOSDisk -Name $wsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
+   	Set-AzureRmVMOSDisk -Name $wsDriveNameSystem -StorageAccountType Standard_LRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
 
   # Add NIC
   Add-AzureRmVMNetworkInterface -VM $wsVmConfig -Id $wsNic.Id -Verbose
@@ -608,7 +608,7 @@ Function Add-WindowsVm2016
 
   # Add data disks
   Write-WithTime -Output "Adding data disk for NTDS, SYSV and LOGS directories..." -Log $Log
-  Add-AzureRmVMDataDisk -VM $vmWs -Name $wsDriveNameData -StorageAccountType StandardLRS -Lun 0 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
+  Add-AzureRmVMDataDisk -VM $vmWs -Name $wsDriveNameData -StorageAccountType Standard_LRS -Lun 0 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
 
   # Update disk configuration
   Write-WithTime -Output "Applying new disk configurations..." -Log $Log
@@ -687,7 +687,7 @@ Function Add-LinuxVm
    $lsVmConfig = New-AzureRmVMConfig –VMName $LinuxSystem -VMSize $lsVmSize -AvailabilitySetId $lnxAvSet.Id  |
    Set-AzureRmVMOperatingSystem -Linux -ComputerName $LinuxSystem -Credential $linuxCred -DisablePasswordAuthentication |
    Set-AzureRmVMSourceImage -PublisherName $publisher -Offer $offer -Skus $sku -Version $version |
-   Set-AzureRmVMOSDisk -Name $lsDriveNameSystem -StorageAccountType StandardLRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
+   Set-AzureRmVMOSDisk -Name $lsDriveNameSystem -StorageAccountType Standard_LRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
 
   # Add NIC
   Add-AzureRmVMNetworkInterface -VM $lsVmConfig -Id $lsNic.Id -Verbose
@@ -709,7 +709,7 @@ Function Add-LinuxVm
 
   # Add data disks
   Write-WithTime -Output "Adding data disk..." -Log $Log
-  Add-AzureRmVMDataDisk -VM $vmLs -Name $lsDriveNameData -StorageAccountType StandardLRS -Lun 1 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
+  Add-AzureRmVMDataDisk -VM $vmLs -Name $lsDriveNameData -StorageAccountType Standard_LRS -Lun 1 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
 
   # Update disk configuration
   Write-WithTime -Output "Applying new disk configurations..." -Log $Log
