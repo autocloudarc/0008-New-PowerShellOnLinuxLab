@@ -1126,7 +1126,7 @@ ElseIf ($ResponsesObj.pOpenLogsNow -in 'N','NO')
     Stop-Transcript -Verbose -ErrorAction SilentlyContinue
 } #end condition
 
-Stop-Transcript -Verbose -ErrorAction SilentlyContinue
+Stop-Transcript -ErrorAction SilentlyContinue -Verbose
 
 #endregion FOOTER
 
