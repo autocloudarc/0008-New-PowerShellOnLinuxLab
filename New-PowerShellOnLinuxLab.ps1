@@ -190,11 +190,11 @@ function Get-PSGalleryModule
 	} #end foreach
 } #end function
 
-function New-AzureRmAuthentication
+function New-AzAuthentication
 {
     # Resets profiles in case you have multiple Azure Subscriptions and connects to your Azure Account [Uncomment if you haven't already authenticated to your Azure subscription]
 	# Clear-AzureProfile -Force -ErrorAction SilentlyContinue
-	Connect-AzureRmAccount
+	Connect-AzAccount
 } #end function
 
 # Modules to add
@@ -204,7 +204,7 @@ function New-AzureRmAuthentication
 
 # index 01
 # Get any PowerShellGallery.com modules required for this script.
-Get-PSGalleryModule -ModulesToInstall "AzureRM", "WriteToLogs", "Posh-SSH", "nx"
+Get-PSGalleryModule -ModulesToInstall "Az", "WriteToLogs", "Posh-SSH", "nx"
 
 #endregion PREREQUISITE FUNCTIONS
 
@@ -239,7 +239,7 @@ New-Item -Path $Transcript -ItemType File -Verbose
 
 # index 04
 # Authenticate to Azure.
-New-AzureRmAuthentication
+New-AzAuthentication
 
 Start-Transcript -Path $Transcript -IncludeInvocationHeader
 
@@ -285,11 +285,11 @@ Do
 {
 	# idnex 05
     # Subscription name
-	(Get-AzureRmSubscription).SubscriptionName
+	(Get-AzSubscription).SubscriptionName
 	[string]$Subscription = Read-Host "Please enter your subscription name, i.e. [MySubscriptionName] "
 	$Subscription = $Subscription.ToUpper()
 } #end Do
-Until (Select-AzureRmSubscription -SubscriptionName $Subscription)
+Until (Select-AzSubscription -SubscriptionName $Subscription)
 
 Do
 {
@@ -317,7 +317,7 @@ Do
 {
  # index 07
  # The location refers to a geographic region of an Azure data center
- $Regions = Get-AzureRmLocation | Select-Object -ExpandProperty Location
+ $Regions = Get-AzLocation | Select-Object -ExpandProperty Location
  Write-ToConsoleAndLog -Output "The list of available regions are :" -Log $Log
  Write-ToConsoleAndLog -Output "" -Log $Log
  Write-ToConsoleAndLog -Output $Regions -Log $Log
@@ -331,7 +331,7 @@ Do
 } #end Do
 Until ($Region -in $Regions)
 
-New-AzureRmResourceGroup -Name $rg -Location $Region -Verbose
+New-AzResourceGroup -Name $rg -Location $Region -Verbose
 
 $azRegionCode = $RegionCode.Keys | Where-Object { $RegionCode[$_] -eq "$Region" }
 
@@ -370,7 +370,7 @@ $autoAcctRg = $rg
 # index 08
 $autoAcct = "AutoAccount" + (Get-Random -Minimum 1000 -Maximum 9999)
 
-New-AzureRmAutomationAccount -ResourceGroupName $rg -Name $autoAcct -Location $Region -Plan Basic
+New-AzAutomationAccount -ResourceGroupName $rg -Name $autoAcct -Location $Region -Plan Basic
 
 # User name is specified directly in script
 $windowsAdminName = "ent.g001.s001"
@@ -383,9 +383,9 @@ $lsVmSize = $wsVmSize
 $AvSetLsName = "AvSetLNUX"
 $AvSetWsName = "AvSetWNDS"
 # index 09
-$winAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku aligned
+$winAvSet = New-AzAvailabilitySet -ResourceGroupName $rg -Name $AvSetWsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku aligned
 # index 10
-$lnxAvSet = New-AzureRmAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku aligned
+$lnxAvSet = New-AzAvailabilitySet -ResourceGroupName $rg -Name $AvSetLsName -Location $Region -PlatformUpdateDomainCount 5 -PlatformFaultDomainCount 2 -Sku aligned
 $gtld = ".com"
 
 Write-ToConsoleAndLog -Output "Please create a password for your Windows VM $windowsAdminName account :" -Log $Log
@@ -449,13 +449,13 @@ $ObjDomain = [PSCustomObject]@{
 
 # index 14
 # Subnet for Windows servers (WS)
-$wsSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetWS -AddressPrefix 10.10.10.0/28 -Verbose
+$wsSubnet = New-AzVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetWS -AddressPrefix 10.10.10.0/28 -Verbose
 # index 15
 # Subnet for Linux servers (LS)
-$lsSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetLS -AddressPrefix 10.10.10.16/28 -Verbose
+$lsSubnet = New-AzVirtualNetworkSubnetConfig -Name $ObjDomain.pSubNetLS -AddressPrefix 10.10.10.16/28 -Verbose
 
 # index 16
-$Vnet = New-AzureRmVirtualNetwork -Name $ObjDomain.pSite -ResourceGroupName $rg -Location $Region -AddressPrefix 10.10.10.0/26 -Subnet $wsSubnet,$lsSubnet -Verbose
+$Vnet = New-AzVirtualNetwork -Name $ObjDomain.pSite -ResourceGroupName $rg -Location $Region -AddressPrefix 10.10.10.0/26 -Subnet $wsSubnet,$lsSubnet -Verbose
 
 # NSG Configuration
 # https://www.petri.com/create-azure-network-security-group-using-arm-powershell
@@ -465,24 +465,24 @@ $nsgWsSubnetName = "NSG-$($ObjDomain.pSubNetWS)"
 $nsgLsSubnetName = "NSG-$($ObjDomain.pSubNetLS)"
 
 # Create the AllowRdpInbound rule for the WS (Windows) subnet
-$nsgRuleAllowRdpIn = New-AzureRmNetworkSecurityRuleConfig -Name "AllowRdpInbound" -Direction Inbound -Priority 100 -Access Allow -SourceAddressPrefix "Internet" -SourcePortRange "*" `
+$nsgRuleAllowRdpIn = New-AzNetworkSecurityRuleConfig -Name "AllowRdpInbound" -Direction Inbound -Priority 100 -Access Allow -SourceAddressPrefix "Internet" -SourcePortRange "*" `
 -DestinationAddressPrefix "VirtualNetwork" -DestinationPortRange 3389 -Protocol Tcp -Verbose
 # Create the AllowSshInbound rule for the LS (Linux) subnet
-$nsgRuleAllowSshIn = New-AzureRmNetworkSecurityRuleConfig -Name "AllowSshInbound" -Direction Inbound -Priority 100 -Access Allow -SourceAddressPrefix "Internet" -SourcePortRange "*" `
+$nsgRuleAllowSshIn = New-AzNetworkSecurityRuleConfig -Name "AllowSshInbound" -Direction Inbound -Priority 100 -Access Allow -SourceAddressPrefix "Internet" -SourcePortRange "*" `
 -DestinationAddressPrefix "VirtualNetwork" -DestinationPortRange 22 -Protocol Tcp -Verbose
 # Create the AllowWsManInound rule for the LS (Linux) subnet
-$nsgRuleAllowWsManIn = New-AzureRmNetworkSecurityRuleConfig -Name "AllowWsManInbound" -Direction Inbound -Priority 110 -Access Allow -SourceAddressPrefix "Internet" -SourcePortRange "8" `
+$nsgRuleAllowWsManIn = New-AzNetworkSecurityRuleConfig -Name "AllowWsManInbound" -Direction Inbound -Priority 110 -Access Allow -SourceAddressPrefix "Internet" -SourcePortRange "8" `
 -DestinationAddressPrefix "VirtualNetwork" -DestinationPortRange 5986 -Protocol Tcp -Verbose
 
 # Apply the rules to the subnets
-$nsgWsSubnetObj = New-AzureRmNetworkSecurityGroup -Name $nsgWsSubnetName -ResourceGroupName $rg -Location $Region -SecurityRules $nsgRuleAllowRdpIn -Verbose
-$nsgLsSubnetObj = New-AzureRmNetworkSecurityGroup -Name $nsgLsSubnetName -ResourceGroupName $rg -Location $Region -SecurityRules $nsgRuleAllowSshIn, $nsgRuleAllowWsManIn -Verbose
+$nsgWsSubnetObj = New-AzNetworkSecurityGroup -Name $nsgWsSubnetName -ResourceGroupName $rg -Location $Region -SecurityRules $nsgRuleAllowRdpIn -Verbose
+$nsgLsSubnetObj = New-AzNetworkSecurityGroup -Name $nsgLsSubnetName -ResourceGroupName $rg -Location $Region -SecurityRules $nsgRuleAllowSshIn, $nsgRuleAllowWsManIn -Verbose
 
 # Associate NSGs with VNET subnets
 # index 17
-Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSubNetWS -AddressPrefix $wsSubnet.AddressPrefix -NetworkSecurityGroup $nsgWsSubnetObj | Set-AzureRmVirtualNetwork -Verbose
+Set-AzVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSubNetWS -AddressPrefix $wsSubnet.AddressPrefix -NetworkSecurityGroup $nsgWsSubnetObj | Set-AzVirtualNetwork -Verbose
 # index 18
-Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSubNetLS -AddressPrefix $lsSubnet.AddressPrefix -NetworkSecurityGroup $nsgLsSubnetObj | Set-AzureRmVirtualNetwork -Verbose
+Set-AzVirtualNetworkSubnetConfig -VirtualNetwork $Vnet -Name $ObjDomain.pSubNetLS -AddressPrefix $lsSubnet.AddressPrefix -NetworkSecurityGroup $nsgLsSubnetObj | Set-AzVirtualNetwork -Verbose
 
 # Specify disk size as 10 GiB
 [int]$wsDataDiskSize = 10
@@ -578,43 +578,43 @@ Function Add-WindowsVm2016
  $DomainLabel = $DomainLabel.ToLower()
  Write-WithTime -Output "Creating public IP..." -Log $Log
  # Now we can string all the pre-requisites together to construct both the VIP and NIC
- $wsPip = New-AzureRmPublicIpAddress -ResourceGroupName $rg -Name $wsPipName -Location $Region -AllocationMethod Static -DomainNameLabel $DomainLabel -Verbose
+ $wsPip = New-AzPublicIpAddress -ResourceGroupName $rg -Name $wsPipName -Location $Region -AllocationMethod Static -DomainNameLabel $DomainLabel -Verbose
 
  Write-WithTime -Output "Creating NIC..." -Log $Log
- $wsNic = New-AzureRmNetworkInterface -ResourceGroupName $rg -Name $wsNicName -Location $Region -PrivateIpAddress "10.10.10.$x" -SubnetId $Vnet.Subnets[0].Id -PublicIpAddressId $wsPip.Id -Verbose
+ $wsNic = New-AzNetworkInterface -ResourceGroupName $rg -Name $wsNicName -Location $Region -PrivateIpAddress "10.10.10.$x" -SubnetId $Vnet.Subnets[0].Id -PublicIpAddressId $wsPip.Id -Verbose
 
  # If the VM doesn't aready exist, configure and create it
- If (!((Get-AzureRmVM -ResourceGroupName $rg).Name -match $Ws2016))
+ If (!((Get-AzVM -ResourceGroupName $rg).Name -match $Ws2016))
  {
 		Write-WithTime -Output "VM $Ws2016 doesn't already exist. Configuring..." -Log $Log
   # Setup new vm configuration
   # Ref: https://github.com/MicrosoftDocs/OfficeDocs-Enterprise/issues/46
-  $wsVmConfig = New-AzureRmVMConfig –VMName $Ws2016 -VMSize $wsVmSize -AvailabilitySetId $winAvSet.Id |
-	Set-AzureRmVMOperatingSystem -Windows -ComputerName $Ws2016 -Credential $windowsCred -ProvisionVMAgent -EnableAutoUpdate |
-   	Set-AzureRmVMSourceImage -PublisherName $imageObj.publisherWindows -Offer $imageObj.offerWindows -Skus $imageObj.skuWindows -Version $imageObj.versionWindows |
-   	Set-AzureRmVMOSDisk -Name $wsDriveNameSystem -StorageAccountType Standard_LRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
+  $wsVmConfig = New-AzVMConfig –VMName $Ws2016 -VMSize $wsVmSize -AvailabilitySetId $winAvSet.Id |
+	Set-AzVMOperatingSystem -Windows -ComputerName $Ws2016 -Credential $windowsCred -ProvisionVMAgent -EnableAutoUpdate |
+   	Set-AzVMSourceImage -PublisherName $imageObj.publisherWindows -Offer $imageObj.offerWindows -Skus $imageObj.skuWindows -Version $imageObj.versionWindows |
+   	Set-AzVMOSDisk -Name $wsDriveNameSystem -StorageAccountType Standard_LRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
 
   # Add NIC
-  Add-AzureRmVMNetworkInterface -VM $wsVmConfig -Id $wsNic.Id -Verbose
+  Add-AzVMNetworkInterface -VM $wsVmConfig -Id $wsNic.Id -Verbose
 
   # Create new VM
   Write-WithTime -Output "Creating VM from configuration..." -Log $Log
-  New-AzureRmVM -ResourceGroupName $rg -Location $Region -VM $wsVmConfig -Verbose
+  New-AzVM -ResourceGroupName $rg -Location $Region -VM $wsVmConfig -Verbose
 
   # Get current VM configuration
-  $vmWs = Get-AzureRmVM -ResourceGroupName $rg -Name $Ws2016
+  $vmWs = Get-AzVM -ResourceGroupName $rg -Name $Ws2016
 
   # Set NIC
   Write-WithTime -Output "Adding NIC..." -Log $Log
-  Set-AzureRmNetworkInterface -NetworkInterface $wsNic -Verbose
+  Set-AzNetworkInterface -NetworkInterface $wsNic -Verbose
 
   # Add data disks
   Write-WithTime -Output "Adding data disk for NTDS, SYSV and LOGS directories..." -Log $Log
-  Add-AzureRmVMDataDisk -VM $vmWs -Name $wsDriveNameData -StorageAccountType Standard_LRS -Lun 0 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
+  Add-AzVMDataDisk -VM $vmWs -Name $wsDriveNameData -StorageAccountType Standard_LRS -Lun 0 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
 
   # Update disk configuration
   Write-WithTime -Output "Applying new disk configurations..." -Log $Log
-  Update-AzureRmVM -ResourceGroupName $rg -VM $vmWs -Verbose
+  Update-AzVM -ResourceGroupName $rg -VM $vmWs -Verbose
  } #end If
  else
  {
@@ -652,9 +652,9 @@ Function Add-LinuxVm
 
  Write-WithTime -Output "Creating public IP..." -Log $Log
  # Now we can string all the pre-requisites together to construct both the VIP and NIC
- $lsPip = New-AzureRmPublicIpAddress -ResourceGroupName $rg -Name $lsPipName -Location $Region -AllocationMethod Static -IdleTimeoutInMinutes 4 -DomainNameLabel $DomainLabel -Verbose
+ $lsPip = New-AzPublicIpAddress -ResourceGroupName $rg -Name $lsPipName -Location $Region -AllocationMethod Static -IdleTimeoutInMinutes 4 -DomainNameLabel $DomainLabel -Verbose
  Write-WithTime -Output "Creating NIC..." -Log $Log
- $lsNic = New-AzureRmNetworkInterface -ResourceGroupName $rg -Name $lsNicName -Location $Region -PrivateIpAddress "10.10.10.$y" -SubnetId $Vnet.Subnets[1].Id -PublicIpAddressId $lsPip.Id -Verbose
+ $lsNic = New-AzNetworkInterface -ResourceGroupName $rg -Name $lsNicName -Location $Region -PrivateIpAddress "10.10.10.$y" -SubnetId $Vnet.Subnets[1].Id -PublicIpAddressId $lsPip.Id -Verbose
 
  Switch ($i)
  {
@@ -681,43 +681,43 @@ Function Add-LinuxVm
  } #end Switch
 
  # If the VM doesn't aready exist, configure and create it
- If (-not((Get-AzureRmVM -ResourceGroupName $rg).Name -match $LinuxSystem))
+ If (-not((Get-AzVM -ResourceGroupName $rg).Name -match $LinuxSystem))
  {
   Write-WithTime -Output "VM $LinuxSystem doesn't already exist. Configuring..." -Log $Log
 
   # Setup new vm configuration
-   $lsVmConfig = New-AzureRmVMConfig –VMName $LinuxSystem -VMSize $lsVmSize -AvailabilitySetId $lnxAvSet.Id  |
-   Set-AzureRmVMOperatingSystem -Linux -ComputerName $LinuxSystem -Credential $linuxCred -DisablePasswordAuthentication |
-   Set-AzureRmVMSourceImage -PublisherName $publisher -Offer $offer -Skus $sku -Version $version |
-   Set-AzureRmVMOSDisk -Name $lsDriveNameSystem -StorageAccountType Standard_LRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
+   $lsVmConfig = New-AzVMConfig –VMName $LinuxSystem -VMSize $lsVmSize -AvailabilitySetId $lnxAvSet.Id  |
+   Set-AzVMOperatingSystem -Linux -ComputerName $LinuxSystem -Credential $linuxCred -DisablePasswordAuthentication |
+   Set-AzVMSourceImage -PublisherName $publisher -Offer $offer -Skus $sku -Version $version |
+   Set-AzVMOSDisk -Name $lsDriveNameSystem -StorageAccountType Standard_LRS -DiskSizeInGB 128 -CreateOption FromImage -Caching ReadWrite -Verbose
 
   # Add NIC
-  Add-AzureRmVMNetworkInterface -VM $lsVmConfig -Id $lsNic.Id -Verbose
+  Add-AzVMNetworkInterface -VM $lsVmConfig -Id $lsNic.Id -Verbose
 
   # Configure SSH Keys
   # http://technodrone.blogspot.com/2010/04/those-annoying-thing-in-powershell.html
-  Add-AzureRmVMSshPublicKey -VM $lsVmConfig -KeyData ($sshPublicKey | Out-String) -Path $sshAuthorizedKeysPath
+  Add-AzVMSshPublicKey -VM $lsVmConfig -KeyData ($sshPublicKey | Out-String) -Path $sshAuthorizedKeysPath
 
   # Create new VM
   Write-WithTime -Output "Creating VM from configuration..." -Log $Log
-  New-AzureRmVM -ResourceGroupName $rg -Location $Region -VM $lsVmConfig -Verbose
+  New-AzVM -ResourceGroupName $rg -Location $Region -VM $lsVmConfig -Verbose
 
   # Get current VM configuration
-  $vmLs = Get-AzureRmVM -ResourceGroupName $rg -Name $LinuxSystem
+  $vmLs = Get-AzVM -ResourceGroupName $rg -Name $LinuxSystem
 
   # Set NIC
   Write-WithTime -Output "Adding NIC..." -Log $Log
-  Set-AzureRmNetworkInterface -NetworkInterface $lsNic -Verbose
+  Set-AzNetworkInterface -NetworkInterface $lsNic -Verbose
 
   # Add data disks
   Write-WithTime -Output "Adding data disk..." -Log $Log
-  Add-AzureRmVMDataDisk -VM $vmLs -Name $lsDriveNameData -StorageAccountType Standard_LRS -Lun 1 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
+  Add-AzVMDataDisk -VM $vmLs -Name $lsDriveNameData -StorageAccountType Standard_LRS -Lun 1 -DiskSizeInGB 10 -CreateOption Empty -Caching None -Verbose
 
   # Update disk configuration
   Write-WithTime -Output "Applying new disk configurations..." -Log $Log
-  Update-AzureRmVM -ResourceGroupName $rg -VM $vmLs -Verbose
+  Update-AzVM -ResourceGroupName $rg -VM $vmLs -Verbose
 
-  Get-AzureRmAutomationDscOnboardingMetaconfig -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -OutputFolder $LogPath -Confirm:$false -Force
+  Get-AzAutomationDscOnboardingMetaconfig -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -OutputFolder $LogPath -Confirm:$false -Force
   $AutoRegPath = Join-Path -Path $LogPath -ChildPath 'DscMetaConfigs'
   $AutoRegFile = Join-Path -Path $AutoRegPath -ChildPath localhost.meta.mof
   $AutoRegInfo = Get-Content -Path $AutoRegFile
@@ -745,7 +745,7 @@ Function Add-LinuxVm
     }"
     # `"FileUri`": [`"$dscMetaMofBlobUri[$i-1]`"]
     # `"ConfigurationModeFrequencyMins`": 15,
-  Set-AzureRmVMExtension -ResourceGroupName $rg `
+  Set-AzVMExtension -ResourceGroupName $rg `
   -VMName $LinuxSystem `
   -Location $Region `
   -Name $dscExtensionName `
@@ -768,7 +768,7 @@ Function Add-LinuxVm
     `"storageAccountKey`": `"$storageKeyPri`"
     }"
 
-  Set-AzureRmVMExtension -ResourceGroupName $rg -VMName $LinuxSystem -Location $Region `
+  Set-AzVMExtension -ResourceGroupName $rg -VMName $LinuxSystem -Location $Region `
   -Name $cseExtensionName -Publisher $csePublisher `
   -ExtensionType $cseExtensionName -TypeHandlerVersion $cseVersion `
   -SettingString $csePublicConf -ProtectedSettingString $csePrivateConf
@@ -782,9 +782,9 @@ Function Add-LinuxVm
  # Add tag for OS version details
  Switch ($i)
  {
-  1 { Set-AzureRmResource -Tag @{ OsVersion="$($imageObj.urnUbuntu)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force }
-  2 { Set-AzureRmResource -Tag @{ OsVersion="$($imageObj.urnCentOS)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force  }
-  3 { Set-AzureRmResource -Tag @{ OsVersion="$($imageObj.urnOpenSUSE)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force }
+  1 { Set-AzResource -Tag @{ OsVersion="$($imageObj.urnUbuntu)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force }
+  2 { Set-AzResource -Tag @{ OsVersion="$($imageObj.urnCentOS)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force  }
+  3 { Set-AzResource -Tag @{ OsVersion="$($imageObj.urnOpenSUSE)" } -ResourceName $LinuxSystem -ResourceGroupName $rg -ResourceType Microsoft.Compute/virtualMachines -Confirm:$false -Force }
  } #end switch
 } #End function
 
@@ -923,12 +923,12 @@ else
   $randomString = New-RandomString
   $saName  = $randomString.Substring(4,8)
  } #end while
- While (-not((Get-AzureRmStorageAccountNameAvailability -Name $saName).NameAvailable))
+ While (-not((Get-AzStorageAccountNameAvailability -Name $saName).NameAvailable))
  # index 20
- New-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Location $Region -Type Standard_LRS -Kind Storage -Verbose
+ New-AzStorageAccount -ResourceGroupName $rg -Name $saName -Location $Region -Type Standard_LRS -Kind Storage -Verbose
 
- $saResource = Get-AzureRmStorageAccount -ResourceGroupName $rg -Name $saName -Verbose
- $storageKeyPri = (Get-AzureRmStorageAccountKey -ResourceGroupName $rg -Name $saName).Value[0]
+ $saResource = Get-AzStorageAccount -ResourceGroupName $rg -Name $saName -Verbose
+ $storageKeyPri = (Get-AzStorageAccountKey -ResourceGroupName $rg -Name $saName).Value[0]
 
  # index 21
  # Specify custom script directory, file and full local source path
@@ -991,7 +991,7 @@ else
  } # end if
 
  $LinuxSystems = @($ObjDomain.pLsUbuntu,$ObjDomain.pLsCentOs,$ObjDomain.pLsOpenSUSE)
- # Define the parameters for Get-AzureRmAutomationDscOnboardingMetaconfig using PowerShell Splatting
+ # Define the parameters for Get-AzAutomationDscOnboardingMetaconfig using PowerShell Splatting
  $Params = @{
     ResourceGroupName = $autoAcctRg; # The name of the ARM Resource Group that contains your Azure Automation Account
     AutomationAccountName = $autoAcct; # The name of the Azure Automation Account where you want a node on-boarded to
@@ -1002,7 +1002,7 @@ else
 # Use PowerShell splatting to pass parameters to the Azure Automation cmdlet being invoked
 # For more info about splatting, run: Get-Help -Name about_Splatting
 # index 24
-Get-AzureRmAutomationDscOnboardingMetaconfig @Params -Confirm:$false -Force
+Get-AzAutomationDscOnboardingMetaconfig @Params -Confirm:$false -Force
 $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recurse
 # Create blob containers
  If ($saResource)
@@ -1037,10 +1037,10 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
 
  # index 30
  # Import nx module to Azure Automation Account
- New-AzureRmAutomationModule -AutomationAccountName $autoAcct -Name $requiredModuleName -ContentLink $moduleBlobUri -ResourceGroupName $autoAcctRg -Verbose
+ New-AzAutomationModule -AutomationAccountName $autoAcct -Name $requiredModuleName -ContentLink $moduleBlobUri -ResourceGroupName $autoAcctRg -Verbose
   Do
      {
-        $importStatus = Get-AzureRmAutomationModule -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -Name $requiredModuleName -Verbose
+        $importStatus = Get-AzAutomationModule -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -Name $requiredModuleName -Verbose
         Start-Sleep -Seconds 3
      } #end do
  Until ($importStatus.ProvisioningState -eq "Succeeded")
@@ -1050,17 +1050,17 @@ $dscMetaConfigsMof = Get-ChildItem -Path $dscMetaConfigsDir -Include *.mof -Recu
 
  # index 31
  # Import DSC configuration to Azure Automation
- Import-AzureRmAutomationDscConfiguration -AutomationAccountName $autoAcct -ResourceGroupName $autoAcctRg -SourcePath $dscScriptSourcePath -Description "Simple DSC file addition example" -Published -LogVerbose $true -Force
+ Import-AzAutomationDscConfiguration -AutomationAccountName $autoAcct -ResourceGroupName $autoAcctRg -SourcePath $dscScriptSourcePath -Description "Simple DSC file addition example" -Published -LogVerbose $true -Force
 
  # index 32
  # Compile DSC configuration
- $CompilationJob = Start-AzureRmAutomationDscCompilationJob -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -ConfigurationName $linuxFileConfigName -Verbose
+ $CompilationJob = Start-AzAutomationDscCompilationJob -ResourceGroupName $autoAcctRg -AutomationAccountName $autoAcct -ConfigurationName $linuxFileConfigName -Verbose
  while(-not($CompilationJob.EndTime) -and (-not($CompilationJob.Exception)))
     {
-        $CompilationJob = $CompilationJob | Get-AzureRmAutomationDscCompilationJob
+        $CompilationJob = $CompilationJob | Get-AzAutomationDscCompilationJob
         Start-Sleep -Seconds 3
     } #end while
- $CompilationJob | Get-AzureRmAutomationDscCompilationJobOutput –Stream Any
+ $CompilationJob | Get-AzAutomationDscCompilationJobOutput –Stream Any
 
  # index 33
  # Deploy Windows servers
@@ -1202,8 +1202,8 @@ Invoke-SSHCommand -Command { sudo cat /tmp/dir/file } -SSHSession $sshSession | 
 
 <#
 To gracefully remove deployed resources, execute the following commands
-Get-AzureRmVm -ResourceGroupName $rg | Stop-AzureRmVm -Force
-Remove-AzureRmResourceGroup -Name $rg -Force
+Get-AzVm -ResourceGroupName $rg | Stop-AzVm -Force
+Remove-AzResourceGroup -Name $rg -Force
 #>
 
 Pause
